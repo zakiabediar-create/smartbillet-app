@@ -6,18 +6,43 @@ export default function App() {
   const [isAccordionOpen, setIsAccordionOpen] = useState(true);
   const [appliedYield, setAppliedYield] = useState(false);
 
-  // États pour l'onglet Paramètres (Règles configurables)
+  // Paramètres par défaut
   const [targetJ5, setTargetJ5] = useState(45);
   const [srPercentage, setSrPercentage] = useState(80);
   const [yieldThreshold, setYieldThreshold] = useState(90);
   const [autoYieldPrice, setAutoYieldPrice] = useState(5);
   const [autoPromoDiscount, setAutoPromoDiscount] = useState(20);
-  const [settingsSaved, setSettingsSaved] = useState(false);
 
-  const handleSaveSettings = (e) => {
+  // Gestion des stratégies personnalisées créées par l'utilisateur
+  const [customStrategies, setCustomStrategies] = useState([
+    { id: 1, name: 'Palier Temporel Standard', trigger: 'J-5 ou moins & jauge < 45%', action: 'Remise -20% sur BilletReduc', active: true },
+    { id: 2, name: 'Yielding Premium Carré Or', trigger: 'Carré Or > 90%', action: 'Hausse tarifaire +5 €', active: true }
+  ]);
+
+  const [newStratName, setNewStratName] = useState('');
+  const [newStratTrigger, setNewStratTrigger] = useState('');
+  const [newStratAction, setNewStratAction] = useState('');
+
+  const handleCreateStrategy = (e) => {
     e.preventDefault();
-    setSettingsSaved(true);
-    setTimeout(() => setSettingsSaved(false), 3000);
+    if (!newStratName || !newStratTrigger || !newStratAction) return;
+
+    const newStrategy = {
+      id: Date.now(),
+      name: newStratName,
+      trigger: newStratTrigger,
+      action: newStratAction,
+      active: true
+    };
+
+    setCustomStrategies([...customStrategies, newStrategy]);
+    setNewStratName('');
+    setNewStratTrigger('');
+    setNewStratAction('');
+  };
+
+  const toggleStrategyStatus = (id) => {
+    setCustomStrategies(customStrategies.map(s => s.id === id ? { ...s, active: !s.active } : s));
   };
 
   return (
@@ -90,116 +115,117 @@ export default function App() {
           </div>
         </header>
 
-        {/* CONDITION D'AFFICHAGE : Si l'onglet actif est "Paramètres", on affiche l'écran de configuration, sinon le Tableau de bord complet */}
+        {/* CONDITION D'AFFICHAGE SELON L'ONGLET ACTIF DANS LA SIDEBAR */}
         {activeTab === 'Paramètres' ? (
+          /* ÉCRAN DE CONFIGURATION ET CRÉATION DE STRATÉGIES */
           <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-6 space-y-6">
             <div className="flex justify-between items-center border-b border-slate-800 pb-4">
               <div>
-                <h2 className="text-sm font-semibold text-white">Paramétrage du Moteur de Yielding AI & Seuils</h2>
-                <p className="text-[10px] text-slate-400">Définissez les règles décisionnelles par défaut applicables à vos représentations.</p>
+                <h2 className="text-sm font-semibold text-white">⚙️ Paramétrage & Stratégies de Yielding sur-mesure</h2>
+                <p className="text-[10px] text-slate-400">Configurez les seuils globaux et créez vos propres règles décisionnelles métiers.</p>
               </div>
-              {settingsSaved && (
-                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-3 py-1 rounded-lg font-semibold animate-pulse">
-                  ✓ Paramètres enregistrés avec succès
-                </span>
-              )}
+              <button
+                onClick={() => setActiveTab('Tableau de bord')}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs transition font-medium"
+              >
+                ← Retour au Tableau de bord
+              </button>
             </div>
 
-            <form onSubmit={handleSaveSettings} className="space-y-6">
-              {/* Section 1 : Seuils d'Alerte Financière */}
-              <div className="space-y-3 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
-                <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">1. Seuils d'Alerte & Objectifs Temporels (J-X)</h3>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-300 font-medium block">
-                      Cible de remplissage minimum à J-5 (%) :
-                    </label>
-                    <input
-                      type="number"
-                      value={targetJ5}
-                      onChange={(e) => setTargetJ5(e.target.value)}
-                      className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs focus:outline-none focus:border-emerald-500"
-                    />
-                    <span className="text-[9px] text-slate-500 block">En dessous de ce seuil, une alerte risque financier est déclenchée.</span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-300 font-medium block">
-                      Seuil de Rentabilité (SR) de référence (%) :
-                    </label>
-                    <input
-                      type="number"
-                      value={srPercentage}
-                      onChange={(e) => setSrPercentage(e.target.value)}
-                      className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs focus:outline-none focus:border-emerald-500"
-                    />
-                    <span className="text-[9px] text-slate-500 block">Pourcentage des coûts fixes à couvrir pour valider l'équilibre.</span>
-                  </div>
+            {/* Bloc Seuils Globaux */}
+            <div className="space-y-3 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
+              <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">1. Seuils d'Alerte & Objectifs Globaux</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[11px] text-slate-300 font-medium block">Cible de remplissage minimum à J-5 (%) :</label>
+                  <input
+                    type="number"
+                    value={targetJ5}
+                    onChange={(e) => setTargetJ5(e.target.value)}
+                    className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] text-slate-300 font-medium block">Seuil de Rentabilité (SR) de référence (%) :</label>
+                  <input
+                    type="number"
+                    value={srPercentage}
+                    onChange={(e) => setSrPercentage(e.target.value)}
+                    className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
+                  />
                 </div>
               </div>
+            </div>
 
-              {/* Section 2 : Règles de Yielding Automatisé */}
-              <div className="space-y-3 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
-                <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">2. Règles de Yielding Automatisé & Plafonds</h3>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-300 font-medium block">
-                      Déclencheur d'opportunité Carré Or (%) :
-                    </label>
-                    <input
-                      type="number"
-                      value={yieldThreshold}
-                      onChange={(e) => setYieldThreshold(e.target.value)}
-                      className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs focus:outline-none focus:border-emerald-500"
-                    />
-                    <span className="text-[9px] text-slate-500 block">Taux de remplissage du Carré Or activant la hausse de prix.</span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-300 font-medium block">
-                      Hausse de tarif facial conseillée (€) :
-                    </label>
-                    <input
-                      type="number"
-                      value={autoYieldPrice}
-                      onChange={(e) => setAutoYieldPrice(e.target.value)}
-                      className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs focus:outline-none focus:border-emerald-500"
-                    />
-                    <span className="text-[9px] text-slate-500 block">Montant ajouté sur les derniers sièges premium en forte demande.</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-300 font-medium block">
-                      Remise flash de déstockage réseau tiers (%) :
-                    </label>
-                    <input
-                      type="number"
-                      value={autoPromoDiscount}
-                      onChange={(e) => setAutoPromoDiscount(e.target.value)}
-                      className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs focus:outline-none focus:border-emerald-500"
-                    />
-                    <span className="text-[9px] text-slate-500 block">Taux de rabais suggéré pour BilletReduc en cas de retard.</span>
-                  </div>
-                </div>
+            {/* Bloc Création de Stratégies Personnalisées */}
+            <div className="space-y-4 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">2. Studio de Création de Stratégies Personnalisées</h3>
+                <span className="text-[10px] text-slate-500">{customStrategies.length} stratégie(s) active(s) ou configurée(s)</span>
               </div>
 
-              {/* Bouton de sauvegarde */}
-              <div className="flex justify-end pt-2">
-                <button
-                  type="submit"
-                  className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-2 rounded-lg text-xs transition shadow"
-                >
-                  Enregistrer les paramètres de l'IA
-                </button>
+              {/* Liste des stratégies existantes */}
+              <div className="grid grid-cols-2 gap-3">
+                {customStrategies.map((strat) => (
+                  <div key={strat.id} className="bg-[#131927] border border-slate-800 p-3 rounded-lg flex flex-col justify-between space-y-2">
+                    <div className="flex justify-between items-start">
+                      <h4 className="font-bold text-white text-xs">{strat.name}</h4>
+                      <button
+                        onClick={() => toggleStrategyStatus(strat.id)}
+                        className={`text-[9px] px-2 py-0.5 rounded font-semibold ${
+                          strat.active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400'
+                        }`}
+                      >
+                        {strat.active ? 'Actif' : 'Inactif'}
+                      </button>
+                    </div>
+                    <div className="text-[10px] text-slate-400 space-y-0.5">
+                      <p>🔍 <strong>Déclencheur :</strong> {strat.trigger}</p>
+                      <p>⚡ <strong>Action :</strong> {strat.action}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </form>
+
+              {/* Formulaire de création d'une nouvelle stratégie */}
+              <form onSubmit={handleCreateStrategy} className="pt-3 border-t border-slate-800 space-y-3">
+                <h4 className="text-[11px] font-semibold text-white">Ajouter une nouvelle règle sur-mesure :</h4>
+                <div className="grid grid-cols-3 gap-3">
+                  <input
+                    type="text"
+                    placeholder="Nom de la stratégie (ex: Promo Last Minute)"
+                    value={newStratName}
+                    onChange={(e) => setNewStratName(e.target.value)}
+                    className="bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Condition / Déclencheur (ex: J-2 & < 50%)"
+                    value={newStratTrigger}
+                    onChange={(e) => setNewStratTrigger(e.target.value)}
+                    className="bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Action métier (ex: Brader -30%)"
+                    value={newStratAction}
+                    onChange={(e) => setNewStratAction(e.target.value)}
+                    className="bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-1.5 rounded text-xs transition"
+                  >
+                    + Créer et enregistrer la stratégie
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         ) : (
-          /* Vue Tableau de bord complet d'origine */
+          /* VUE TABLEAU DE BORD COMPLET (Par défaut) */
           <>
             {/* 4 cartes KPIs */}
             <div className="grid grid-cols-4 gap-4">
@@ -228,14 +254,14 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bloc Insights & Recommandations IA avec vocabulaire métier */}
+            {/* Bloc Insights & Recommandations IA */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-semibold text-white flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   Insights & Recommandations IA
                 </h3>
-                <span className="text-[10px] text-slate-500">Analyse de la Vélocité de Vente (Règles J-{5} actives)</span>
+                <span className="text-[10px] text-slate-500">Analyse de la Vélocité de Vente</span>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -249,7 +275,7 @@ export default function App() {
                       <span className="text-[9px] text-slate-500">Jeu. 12 Sept.</span>
                     </div>
                     <p className="text-[10px] text-slate-300">
-                      <strong className="text-white">Constat :</strong> Retard J-5 ({targetJ5}% cible non atteinte). Jauge : 26% (130/500 pl.).
+                      <strong className="text-white">Constat :</strong> Retard J-5 ({targetJ5}% cible). SR non sécurisé. Jauge : 26% (130/500 pl.).
                     </p>
                     <p className="text-[10px] text-rose-400 font-semibold">
                       Manque à gagner estimé : -1 850 € Net
