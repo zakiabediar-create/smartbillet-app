@@ -14,17 +14,24 @@ export default function App() {
   const [autoYieldPrice, setAutoYieldPrice] = useState(5);
   const [autoPromoDiscount, setAutoPromoDiscount] = useState(20);
 
-  // Paramètres spécifiques œuvre par œuvre
+  // Paramètres spécifiques œuvre par œuvre avec indicateur d'héritage (useGlobal: true par défaut)
   const [spectacleSettings, setSpectacleSettings] = useState({
-    1: { title: 'Le Misanthrope', baseCost: 38.0, srTarget: 85, alertJ5: 50 },
-    2: { title: 'Le Dîner de Cons', baseCost: 32.0, srTarget: 75, alertJ5: 40 },
-    3: { title: 'Fary — Aime', baseCost: 30.0, srTarget: 70, alertJ5: 35 }
+    1: { title: 'Le Misanthrope', baseCost: 38.0, srTarget: 85, alertJ5: 50, useGlobal: false },
+    2: { title: 'Le Dîner de Cons', baseCost: 32.0, srTarget: 75, alertJ5: 40, useGlobal: true },
+    3: { title: 'Fary — Aime', baseCost: 30.0, srTarget: 70, alertJ5: 35, useGlobal: true }
   });
 
   const handleSpectacleSettingChange = (id, field, value) => {
     setSpectacleSettings(prev => ({
       ...prev,
       [id]: { ...prev[id], [field]: Number(value) }
+    }));
+  };
+
+  const toggleSpectacleGlobalInheritance = (id) => {
+    setSpectacleSettings(prev => ({
+      ...prev,
+      [id]: { ...prev[id], useGlobal: !prev[id].useGlobal }
     }));
   };
 
@@ -123,9 +130,10 @@ export default function App() {
       }
     : spectaclesList.find(s => s.id === Number(selectedSpectacleId)).kpis;
 
+  // Si le spectacle utilise le global, on prend srPercentage, sinon sa cible spécifique
   const activeSrPercentage = selectedSpectacleId === 'all' 
     ? srPercentage 
-    : spectacleSettings[selectedSpectacleId].srTarget;
+    : (spectacleSettings[selectedSpectacleId].useGlobal ? srPercentage : spectacleSettings[selectedSpectacleId].srTarget);
 
   const isSREffectivelyReached = currentData.coverage >= activeSrPercentage;
 
@@ -239,12 +247,12 @@ export default function App() {
         </header>
 
         {activeTab === 'Paramètres' ? (
-          /* ONGLET PARAMÈTRES EXPLICATIF ET PÉDAGOGIQUE */
+          /* ONGLET PARAMÈTRES AVEC HÉRITAGE GLOBAL VS SUR-MESURE */
           <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-6 space-y-6">
             <div className="flex justify-between items-center border-b border-slate-800 pb-4">
               <div>
                 <h2 className="text-sm font-semibold text-white">⚙️ Configuration des Règles & Spécificités Œuvre par Œuvre</h2>
-                <p className="text-[10px] text-slate-400">Ajustez les seuils globaux et personnalisez les modèles économiques de chaque spectacle.</p>
+                <p className="text-[10px] text-slate-400">Gérez la priorité entre les règles globales de la saison et les exceptions par spectacle.</p>
               </div>
               <button
                 onClick={() => setActiveTab('Tableau de bord')}
@@ -254,18 +262,12 @@ export default function App() {
               </button>
             </div>
 
-            {/* 1. Bloc Seuils Globaux avec explications explicites */}
+            {/* 1. Bloc Seuils Globaux */}
             <div className="space-y-3 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
               <div className="flex items-center gap-2">
                 <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
                   1. Objectifs Financiers & Seuils d'Alerte Globaux (Saison)
                 </h3>
-                <div className="group relative flex items-center cursor-pointer">
-                  <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                    Ces paramètres s'appliquent par défaut à l'ensemble de la programmation de la saison si aucun réglage spécifique n'est défini pour une œuvre.
-                  </div>
-                </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
@@ -279,7 +281,7 @@ export default function App() {
                     onChange={(e) => setTargetJ5(e.target.value)}
                     className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
                   />
-                  <span className="text-[9px] text-slate-500 block">Seuil d'alerte déclenché si la jauge est inférieure à cette valeur à 5 jours de la représentation.</span>
+                  <span className="text-[9px] text-slate-500 block">Appliqué par défaut à toutes les productions suivant la règle globale.</span>
                 </div>
 
                 <div className="space-y-1">
@@ -292,58 +294,76 @@ export default function App() {
                     onChange={(e) => setSrPercentage(e.target.value)}
                     className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
                   />
-                  <span className="text-[9px] text-slate-500 block">Pourcentage global des coûts fixes à couvrir pour atteindre le seuil de rentabilité.</span>
+                  <span className="text-[9px] text-slate-500 block">Objectif de couverture par défaut pour l'ensemble de la saison.</span>
                 </div>
               </div>
             </div>
 
-            {/* 2. Spécificités Économiques Œuvre par Œuvre avec explications */}
+            {/* 2. Spécificités Économiques avec indicateur d'héritage */}
             <div className="space-y-3 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
               <div className="flex items-center gap-2">
                 <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-                  2. Spécificités Économiques Œuvre par Œuvre (Modèle Granulaire)
+                  2. Spécificités Économiques Œuvre par Œuvre (Règle d'Héritage)
                 </h3>
-                <div className="group relative flex items-center cursor-pointer">
-                  <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                    Permet d'ajuster le modèle économique de chaque spectacle selon ses coûts de production propres et ses objectifs de rentabilité spécifiques.
-                  </div>
-                </div>
               </div>
-              <p className="text-[10px] text-slate-400">Chaque production ayant des charges et des jauges différentes, définissez ici ses paramètres sur mesure :</p>
+              <p className="text-[10px] text-slate-400">
+                Chaque spectacle peut soit <strong>hériter des règles globales</strong> de la saison, soit disposer d'un <strong>réglage sur-mesure</strong> (prioritaire).
+              </p>
 
               <div className="space-y-3 pt-2">
                 {Object.keys(spectacleSettings).map((id) => {
                   const spec = spectacleSettings[id];
-                  const netTarget = Math.round((spec.baseCost * (spec.srTarget / 100)) * 10) / 10;
+                  const currentEffectiveSr = spec.useGlobal ? srPercentage : spec.srTarget;
+                  const netTarget = Math.round((spec.baseCost * (currentEffectiveSr / 100)) * 10) / 10;
+
                   return (
-                    <div key={id} className="bg-[#131927] border border-slate-800 p-3.5 rounded-lg grid grid-cols-3 gap-4 items-center">
-                      <div>
-                        <span className="text-[9px] text-slate-500 uppercase block font-medium">Production #{id}</span>
-                        <h4 className="font-bold text-white text-xs">{spec.title}</h4>
-                        <span className="text-[9px] text-emerald-400 block mt-1">💡 Prix net cible calculé : ~{netTarget} € / billet</span>
+                    <div key={id} className="bg-[#131927] border border-slate-800 p-3.5 rounded-lg space-y-3">
+                      <div className="flex justify-between items-center border-b border-slate-800/60 pb-2">
+                        <div>
+                          <span className="text-[9px] text-slate-500 uppercase block font-medium">Production #{id}</span>
+                          <h4 className="font-bold text-white text-xs">{spec.title}</h4>
+                        </div>
+                        <button
+                          onClick={() => toggleSpectacleGlobalInheritance(id)}
+                          className={`text-[10px] px-3 py-1 rounded font-semibold transition cursor-pointer ${
+                            spec.useGlobal 
+                              ? 'bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700' 
+                              : 'bg-amber-500 text-slate-950 shadow hover:bg-amber-400'
+                          }`}
+                        >
+                          {spec.useGlobal ? '🔗 Hérite du Global (' + srPercentage + '%)' : '⚙️ Réglage sur-mesure actif'}
+                        </button>
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-300 block font-medium">Coût de revient unitaire (€) :</label>
-                        <input
-                          type="number"
-                          value={spec.baseCost}
-                          onChange={(e) => handleSpectacleSettingChange(id, 'baseCost', e.target.value)}
-                          className="w-full bg-[#0E131F] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
-                        />
-                        <span className="text-[8px] text-slate-500 block">Charge fixe unitaire par place.</span>
+                      <div className="grid grid-cols-2 gap-4 items-center">
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-slate-300 block font-medium">Coût de revient unitaire (€) :</label>
+                          <input
+                            type="number"
+                            value={spec.baseCost}
+                            onChange={(e) => handleSpectacleSettingChange(id, 'baseCost', e.target.value)}
+                            className="w-full bg-[#0E131F] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-slate-300 block font-medium">
+                            Objectif Équilibre spécifique (%) : {spec.useGlobal && <span className="text-slate-500 italic">(Désactivé - Mode global)</span>}
+                          </label>
+                          <input
+                            type="number"
+                            disabled={spec.useGlobal}
+                            value={spec.useGlobal ? srPercentage : spec.srTarget}
+                            onChange={(e) => handleSpectacleSettingChange(id, 'srTarget', e.target.value)}
+                            className={`w-full border rounded px-2.5 py-1.5 text-xs ${
+                              spec.useGlobal ? 'bg-[#0E131F]/40 border-slate-800 text-slate-500 cursor-not-allowed' : 'bg-[#0E131F] border-slate-700 text-white'
+                            }`}
+                          />
+                        </div>
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-300 block font-medium">Objectif Équilibre spécifique (%) :</label>
-                        <input
-                          type="number"
-                          value={spec.srTarget}
-                          onChange={(e) => handleSpectacleSettingChange(id, 'srTarget', e.target.value)}
-                          className="w-full bg-[#0E131F] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
-                        />
-                        <span className="text-[8px] text-slate-500 block">Taux de couverture requis pour ce spectacle.</span>
+                      <div className="text-[9px] text-emerald-400 pt-1">
+                        💡 Prix net cible calculé pour cette œuvre : <strong>~{netTarget} € / billet</strong> ({spec.useGlobal ? 'Basé sur l\'objectif global de saison' : 'Basé sur l\'objectif sur-mesure'})
                       </div>
                     </div>
                   );
@@ -538,7 +558,7 @@ export default function App() {
                     </p>
                   </div>
                   <div className="pt-2 border-t border-slate-800/60">
-                    <p className="text-[9px] text-emerald-400 font-medium">👉 Action : +{autoYieldPrice} € sur 10 dern. places Carré Or.</p>
+                    <p className="text-[9px] text-emerald-400 font-medium">👉 Action : +{autoYieldPrice} € les 10 dern. places Carré Or.</p>
                   </div>
                 </div>
 
@@ -580,7 +600,9 @@ export default function App() {
               <div className="space-y-3">
                 {spectaclesList.map((spec) => {
                   const isOpen = openSpectacles[spec.id];
-                  const specSrTarget = spectacleSettings[spec.id].srTarget;
+                  const specSetting = spectacleSettings[spec.id];
+                  const effectiveSpecTarget = specSetting.useGlobal ? srPercentage : specSetting.srTarget;
+
                   return (
                     <div key={spec.id} className="border border-slate-800/80 rounded-lg overflow-hidden bg-[#0E131F]">
                       <button
@@ -588,7 +610,9 @@ export default function App() {
                         className="w-full p-3 flex justify-between items-center hover:bg-slate-800/40 transition text-left cursor-pointer"
                       >
                         <div>
-                          <span className="text-[9px] text-slate-500 uppercase tracking-wider block">{spec.category} (Cible équilibre : {specSrTarget}%)</span>
+                          <span className="text-[9px] text-slate-500 uppercase tracking-wider block">
+                            {spec.category} — Cible équilibre : {effectiveSpecTarget}% ({specSetting.useGlobal ? 'Hérité du global' : 'Sur-mesure'})
+                          </span>
                           <h4 className="font-semibold text-white text-sm">{spec.title}</h4>
                           <p className="text-[10px] text-slate-500">{spec.dates}</p>
                         </div>
