@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 export default function App() {
   const [activeRole, setActiveRole] = useState('Resp. Billetterie');
   const [activeTab, setActiveTab] = useState('Tableau de bord');
-  const [isAccordionOpen, setIsAccordionOpen] = useState(true);
+  // Gestion de l'ouverture des accordéons par spectacle (par ID)
+  const [openSpectacles, setOpenSpectacles] = useState({ 1: true, 2: false, 3: false });
   const [appliedYield, setAppliedYield] = useState(false);
 
   // Paramètres globaux dynamiques
@@ -24,13 +25,55 @@ export default function App() {
   const effectiveCoverage = 82;
   const isSREffectivelyReached = effectiveCoverage >= srPercentage;
 
-  // Liste des représentations
-  const representations = [
-    { id: 1, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places vendues' },
-    { id: 2, date: 'Ven. 13 Sept. — 20h00', rmsNet: 32.0, seats: '310/500 places vendues' },
-    { id: 3, date: 'Sam. 14 Sept. — 20h30', rmsNet: satRepresentationRMS, seats: '480/500 places vendues' },
-    { id: 4, date: 'Dim. 15 Sept. — 15h00', rmsNet: 33.4, seats: '240/500 places vendues' }
+  // Catalogue complet des spectacles et de leurs représentations
+  const spectaclesList = [
+    {
+      id: 1,
+      category: 'Théâtre classique',
+      title: 'Le Misanthrope',
+      dates: '12 sept. — 04 oct. 2026',
+      fillingRate: '26%',
+      soldTickets: 1260,
+      remainingTickets: 3540,
+      representations: [
+        { id: 101, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places vendues' },
+        { id: 102, date: 'Ven. 13 Sept. — 20h00', rmsNet: 32.0, seats: '310/500 places vendues' },
+        { id: 103, date: 'Sam. 14 Sept. — 20h30', rmsNet: satRepresentationRMS, seats: '480/500 places vendues' },
+        { id: 104, date: 'Dim. 15 Sept. — 15h00', rmsNet: 33.4, seats: '240/500 places vendues' }
+      ]
+    },
+    {
+      id: 2,
+      category: 'Comédie',
+      title: 'Le Dîner de Cons',
+      dates: '08 oct. — 30 oct. 2026',
+      fillingRate: '68%',
+      soldTickets: 3100,
+      remainingTickets: 1450,
+      representations: [
+        { id: 201, date: 'Mer. 08 Oct. — 20h30', rmsNet: 34.0, seats: '420/500 places vendues' },
+        { id: 202, date: 'Jeu. 09 Oct. — 20h30', rmsNet: 38.5, seats: '480/500 places vendues' },
+        { id: 203, date: 'Ven. 10 Oct. — 21h00', rmsNet: 40.0, seats: '500/500 places vendues (Complet)' }
+      ]
+    },
+    {
+      id: 3,
+      category: 'Humour / Seul-en-scène',
+      title: 'Fary — Aime',
+      dates: '05 nov. — 20 nov. 2026',
+      fillingRate: '91%',
+      soldTickets: 4550,
+      remainingTickets: 450,
+      representations: [
+        { id: 301, date: 'Jeu. 05 Nov. — 20h00', rmsNet: 42.0, seats: '490/500 places vendues' },
+        { id: 302, date: 'Ven. 06 Nov. — 20h00', rmsNet: 44.5, seats: '500/500 places vendues (Complet)' }
+      ]
+    }
   ];
+
+  const toggleSpectacleAccordion = (id) => {
+    setOpenSpectacles(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Stratégies modulaires
   const [customStrategies, setCustomStrategies] = useState([
@@ -436,7 +479,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Catalogue Événements & Représentations avec infobulle */}
+            {/* Catalogue Multi-Spectacles & Représentations */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -444,63 +487,70 @@ export default function App() {
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong className="text-emerald-400 block mb-1">Catalogue & Séances :</strong>
-                      Suivi détaillé représentation par représentation. Chaque ligne compare le revenu net moyen de la séance à l'objectif d'équilibre requis pour indiquer instantanément si une action corrective est nécessaire.
+                      <strong className="text-emerald-400 block mb-1">Catalogue de Saison :</strong>
+                      Vue d'ensemble de toute la programmation. Chaque spectacle se déplie pour afficher le détail de ses représentations et leur statut d'équilibre en temps réel.
                     </div>
                   </div>
                 </div>
-                <span className="text-[10px] text-slate-500">1 spectacle actif</span>
+                <span className="text-[10px] text-slate-500">{spectaclesList.length} spectacles actifs au catalogue</span>
               </div>
 
-              <div className="border border-slate-800/80 rounded-lg overflow-hidden bg-[#0E131F]">
-                <button
-                  onClick={() => setIsAccordionOpen(!isAccordionOpen)}
-                  className="w-full p-3 flex justify-between items-center hover:bg-slate-800/40 transition text-left"
-                >
-                  <div>
-                    <span className="text-[9px] text-slate-500 uppercase tracking-wider block">Théâtre classique</span>
-                    <h4 className="font-semibold text-white text-sm">Le Misanthrope</h4>
-                    <p className="text-[10px] text-slate-500">12 sept. — 04 oct. 2026</p>
-                  </div>
-                  <div className="flex items-center gap-6 text-[10px]">
-                    <div className="text-right">
-                      <span className="text-slate-500 block">Remplissage global</span>
-                      <span className="text-white font-bold text-xs">26%</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-slate-500 block">Billets vendus</span>
-                      <span className="text-white font-bold text-xs">1 260</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-slate-500 block">Places restantes</span>
-                      <span className="text-amber-400 font-bold text-xs">3 540</span>
-                    </div>
-                    <span className="text-slate-500 text-xs ml-2">{isAccordionOpen ? '▲' : '▼'}</span>
-                  </div>
-                </button>
-
-                {isAccordionOpen && (
-                  <div className="border-t border-slate-800/80 divide-y divide-slate-800/60 text-[10px]">
-                    {representations.map((rep) => {
-                      const isReached = rep.rmsNet >= calculatedSRPrice;
-                      return (
-                        <div key={rep.id} className="p-3 flex justify-between items-center bg-[#131927]/40">
-                          <div>
-                            <span className="font-medium text-white block">{rep.date}</span>
-                            <span className="text-slate-400">Revenu net moyen : <strong>{rep.rmsNet} €</strong> | Objectif équilibre requis : <strong>{calculatedSRPrice} €</strong> | Jauge : {rep.seats}</span>
-                          </div>
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-semibold ${
-                            isReached 
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                          }`}>
-                            {isReached ? '✓ Séance équilibrée — Objectif atteint' : '⚠ Action requise — Sous l\'objectif d\'équilibre'}
-                          </span>
+              <div className="space-y-3">
+                {spectaclesList.map((spec) => {
+                  const isOpen = openSpectacles[spec.id];
+                  return (
+                    <div key={spec.id} className="border border-slate-800/80 rounded-lg overflow-hidden bg-[#0E131F]">
+                      <button
+                        onClick={() => toggleSpectacleAccordion(spec.id)}
+                        className="w-full p-3 flex justify-between items-center hover:bg-slate-800/40 transition text-left cursor-pointer"
+                      >
+                        <div>
+                          <span className="text-[9px] text-slate-500 uppercase tracking-wider block">{spec.category}</span>
+                          <h4 className="font-semibold text-white text-sm">{spec.title}</h4>
+                          <p className="text-[10px] text-slate-500">{spec.dates}</p>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        <div className="flex items-center gap-6 text-[10px]">
+                          <div className="text-right">
+                            <span className="text-slate-500 block">Remplissage global</span>
+                            <span className="text-white font-bold text-xs">{spec.fillingRate}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-slate-500 block">Billets vendus</span>
+                            <span className="text-white font-bold text-xs">{spec.soldTickets.toLocaleString()}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-slate-500 block">Places restantes</span>
+                            <span className="text-amber-400 font-bold text-xs">{spec.remainingTickets.toLocaleString()}</span>
+                          </div>
+                          <span className="text-slate-500 text-xs ml-2">{isOpen ? '▲' : '▼'}</span>
+                        </div>
+                      </button>
+
+                      {isOpen && (
+                        <div className="border-t border-slate-800/80 divide-y divide-slate-800/60 text-[10px]">
+                          {spec.representations.map((rep) => {
+                            const isReached = rep.rmsNet >= calculatedSRPrice;
+                            return (
+                              <div key={rep.id} className="p-3 flex justify-between items-center bg-[#131927]/40">
+                                <div>
+                                  <span className="font-medium text-white block">{rep.date}</span>
+                                  <span className="text-slate-400">Revenu net moyen : <strong>{rep.rmsNet} €</strong> | Objectif équilibre requis : <strong>{calculatedSRPrice} €</strong> | Jauge : {rep.seats}</span>
+                                </div>
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-semibold ${
+                                  isReached 
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                    : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                }`}>
+                                  {isReached ? '✓ Séance équilibrée — Objectif atteint' : '⚠ Action requise — Sous l\'objectif d\'équilibre'}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
