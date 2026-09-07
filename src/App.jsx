@@ -298,13 +298,24 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bloc Insights & Recommandations IA */}
+            {/* Bloc Insights & Recommandations IA avec bulle explicative de la valeur ajoutée */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
-                <h3 className="text-xs font-semibold text-white flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Recommandations Intelligentes & Alertes Séances
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-semibold text-white flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Recommandations Intelligentes & Alertes Séances
+                  </h3>
+                  {/* Bulle d'information sur la valeur ajoutée de l'IA */}
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong className="text-emerald-400 block mb-1">Valeur ajoutée de l'IA (EventLens) :</strong>
+                      L'intelligence artificielle croise en temps réel la vélocité des ventes, l'historique de remplissage et vos seuils pour détecter les risques financiers avant qu'ils ne surviennent et proposer des actions correctives automatisées.
+                    </div>
+                  </div>
+                </div>
+
                 <span className="text-[10px] text-slate-500">
                   {customStrategies.filter(s => s.active).length} stratégie(s) active(s) dans le moteur
                 </span>
