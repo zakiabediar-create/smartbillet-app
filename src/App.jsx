@@ -17,7 +17,11 @@ export default function App() {
   const baseCostPrice = 37.50; 
   const calculatedSRPrice = Math.round((baseCostPrice * (srPercentage / 100)) * 10) / 10;
 
-  // Calcul de la couverture réelle atteinte globalement (simulée ici à 82% de couverture effective)
+  // Calcul dynamique de la couverture de la 3ème séance (Sam. 14 Sept, RMS = 35 €) par rapport au SR configuré
+  const satRepresentationRMS = 35.0;
+  const satCoveragePercentage = Math.round((satRepresentationRMS / calculatedSRPrice) * 100);
+
+  // Calcul de la couverture réelle globale atteinte (simulée ici à 82% de couverture effective)
   const effectiveCoverage = 82;
   const isSREffectivelyReached = effectiveCoverage >= srPercentage;
 
@@ -25,7 +29,7 @@ export default function App() {
   const representations = [
     { id: 1, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places' },
     { id: 2, date: 'Ven. 13 Sept. — 20h00', rmsNet: 32.0, seats: '310/500 places' },
-    { id: 3, date: 'Sam. 14 Sept. — 20h30', rmsNet: 35.0, seats: '480/500 places' },
+    { id: 3, date: 'Sam. 14 Sept. — 20h30', rmsNet: satRepresentationRMS, seats: '480/500 places' },
     { id: 4, date: 'Dim. 15 Sept. — 15h00', rmsNet: 33.4, seats: '240/500 places' }
   ];
 
@@ -287,7 +291,6 @@ export default function App() {
                 <p className="text-[9px] text-emerald-400">+4% au-dessus de la cible</p>
               </div>
 
-              {/* Carte Seuil de Rentabilité corrigée pour afficher l'état réel par rapport à la cible */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
                 <span className="text-[10px] text-slate-400 font-medium">Seuil Rentabilité (SR)</span>
                 <div className={`text-xl font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
@@ -377,7 +380,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Carte 3 : Trajectoire Conforme */}
+                {/* Carte 3 : Trajectoire Conforme (Dynamique avec satCoveragePercentage) */}
                 <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
@@ -387,7 +390,7 @@ export default function App() {
                       <span className="text-[9px] text-slate-500">Sam. 14 Sept.</span>
                     </div>
                     <p className="text-[10px] text-slate-300">
-                      <strong className="text-white">Constat :</strong> Conforme au plan de charge. SR atteint à 102%. RMS Net : 24.50 €.
+                      <strong className="text-white">Constat :</strong> Conforme au plan de charge. SR atteint à {satCoveragePercentage}%. RMS Net : {satRepresentationRMS} €.
                     </p>
                     <p className="text-[9px] text-slate-400">
                       <strong className="text-slate-300">Levier :</strong> Maximisation marge sans commission réseau.
