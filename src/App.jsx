@@ -6,17 +6,19 @@ export default function App() {
   const [isAccordionOpen, setIsAccordionOpen] = useState(true);
   const [appliedYield, setAppliedYield] = useState(false);
 
-  // Paramètres par défaut
+  // Paramètres globaux
   const [targetJ5, setTargetJ5] = useState(45);
   const [srPercentage, setSrPercentage] = useState(80);
   const [yieldThreshold, setYieldThreshold] = useState(90);
   const [autoYieldPrice, setAutoYieldPrice] = useState(5);
   const [autoPromoDiscount, setAutoPromoDiscount] = useState(20);
 
-  // Gestion des stratégies personnalisées créées par l'utilisateur
+  // Stratégies modulaires et personnalisées activables en un clic
   const [customStrategies, setCustomStrategies] = useState([
-    { id: 1, name: 'Palier Temporel Standard', trigger: 'J-5 ou moins & jauge < 45%', action: 'Remise -20% sur BilletReduc', active: true },
-    { id: 2, name: 'Yielding Premium Carré Or', trigger: 'Carré Or > 90%', action: 'Hausse tarifaire +5 €', active: true }
+    { id: 1, name: 'Palier Temporel Standard', trigger: 'J-5 ou moins & jauge < 45%', action: 'Remise -20% sur BilletReduc', active: true, type: 'Modulaire' },
+    { id: 2, name: 'Yielding Premium Carré Or', trigger: 'Carré Or > 90%', action: 'Hausse tarifaire +5 €', active: true, type: 'Modulaire' },
+    { id: 3, name: 'Optimisation Canaux & Marge', trigger: 'Seuil de rentabilité atteint à 100%', action: 'Fermeture des réseaux tiers (0% commission)', active: false, type: 'Modulaire' },
+    { id: 4, name: 'Surclassement Dynamique', trigger: 'Catégorie 1 saturée à 95%', action: 'Basculement automatique de sièges vers Carré Or', active: false, type: 'Modulaire' }
   ]);
 
   const [newStratName, setNewStratName] = useState('');
@@ -32,7 +34,8 @@ export default function App() {
       name: newStratName,
       trigger: newStratTrigger,
       action: newStratAction,
-      active: true
+      active: true,
+      type: 'Personnalisée'
     };
 
     setCustomStrategies([...customStrategies, newStrategy]);
@@ -115,14 +118,14 @@ export default function App() {
           </div>
         </header>
 
-        {/* CONDITION D'AFFICHAGE SELON L'ONGLET ACTIF DANS LA SIDEBAR */}
+        {/* CONDITION D'AFFICHAGE SELON L'ONGLET ACTIF */}
         {activeTab === 'Paramètres' ? (
-          /* ÉCRAN DE CONFIGURATION ET CRÉATION DE STRATÉGIES */
+          /* ÉCRAN DE CONFIGURATION ET GESTION DES STRATÉGIES */
           <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-6 space-y-6">
             <div className="flex justify-between items-center border-b border-slate-800 pb-4">
               <div>
-                <h2 className="text-sm font-semibold text-white">⚙️ Paramétrage & Stratégies de Yielding sur-mesure</h2>
-                <p className="text-[10px] text-slate-400">Configurez les seuils globaux et créez vos propres règles décisionnelles métiers.</p>
+                <h2 className="text-sm font-semibold text-white">⚙️ Gestion & Sélection des Stratégies de Yielding</h2>
+                <p className="text-[10px] text-slate-400">Activez ou désactivez en 1 clic les stratégies modulaires et créez vos règles sur-mesure.</p>
               </div>
               <button
                 onClick={() => setActiveTab('Tableau de bord')}
@@ -157,29 +160,36 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bloc Création de Stratégies Personnalisées */}
+            {/* Bloc Sélection et Activation des Stratégies Modulaires */}
             <div className="space-y-4 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
               <div className="flex justify-between items-center">
-                <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">2. Studio de Création de Stratégies Personnalisées</h3>
-                <span className="text-[10px] text-slate-500">{customStrategies.length} stratégie(s) active(s) ou configurée(s)</span>
+                <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">2. Sélection & Activation des Stratégies Modulaires</h3>
+                <span className="text-[10px] text-slate-500">
+                  {customStrategies.filter(s => s.active).length} sur {customStrategies.length} stratégie(s) active(s)
+                </span>
               </div>
 
-              {/* Liste des stratégies existantes */}
+              {/* Grille des stratégies avec bouton interactif d'activation/désactivation */}
               <div className="grid grid-cols-2 gap-3">
                 {customStrategies.map((strat) => (
                   <div key={strat.id} className="bg-[#131927] border border-slate-800 p-3 rounded-lg flex flex-col justify-between space-y-2">
                     <div className="flex justify-between items-start">
-                      <h4 className="font-bold text-white text-xs">{strat.name}</h4>
+                      <div>
+                        <span className="text-[8px] text-slate-500 uppercase tracking-wider block">{strat.type}</span>
+                        <h4 className="font-bold text-white text-xs">{strat.name}</h4>
+                      </div>
                       <button
                         onClick={() => toggleStrategyStatus(strat.id)}
-                        className={`text-[9px] px-2 py-0.5 rounded font-semibold ${
-                          strat.active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400'
+                        className={`text-[10px] px-2.5 py-1 rounded font-semibold transition cursor-pointer ${
+                          strat.active 
+                            ? 'bg-emerald-500 text-slate-950 shadow hover:bg-emerald-400' 
+                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
                         }`}
                       >
-                        {strat.active ? 'Actif' : 'Inactif'}
+                        {strat.active ? '✓ Activée' : 'Activer'}
                       </button>
                     </div>
-                    <div className="text-[10px] text-slate-400 space-y-0.5">
+                    <div className="text-[10px] text-slate-400 space-y-0.5 border-t border-slate-800/60 pt-2">
                       <p>🔍 <strong>Déclencheur :</strong> {strat.trigger}</p>
                       <p>⚡ <strong>Action :</strong> {strat.action}</p>
                     </div>
@@ -188,26 +198,26 @@ export default function App() {
               </div>
 
               {/* Formulaire de création d'une nouvelle stratégie */}
-              <form onSubmit={handleCreateStrategy} className="pt-3 border-t border-slate-800 space-y-3">
-                <h4 className="text-[11px] font-semibold text-white">Ajouter une nouvelle règle sur-mesure :</h4>
+              <form onSubmit={handleCreateStrategy} className="pt-4 border-t border-slate-800 space-y-3">
+                <h4 className="text-[11px] font-semibold text-white">+ Créer une règle sur-mesure :</h4>
                 <div className="grid grid-cols-3 gap-3">
                   <input
                     type="text"
-                    placeholder="Nom de la stratégie (ex: Promo Last Minute)"
+                    placeholder="Nom (ex: Promo Last Minute)"
                     value={newStratName}
                     onChange={(e) => setNewStratName(e.target.value)}
                     className="bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
                   />
                   <input
                     type="text"
-                    placeholder="Condition / Déclencheur (ex: J-2 & < 50%)"
+                    placeholder="Déclencheur (ex: J-2 & < 50%)"
                     value={newStratTrigger}
                     onChange={(e) => setNewStratTrigger(e.target.value)}
                     className="bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
                   />
                   <input
                     type="text"
-                    placeholder="Action métier (ex: Brader -30%)"
+                    placeholder="Action (ex: Brader -30%)"
                     value={newStratAction}
                     onChange={(e) => setNewStratAction(e.target.value)}
                     className="bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
@@ -218,7 +228,7 @@ export default function App() {
                     type="submit"
                     className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-1.5 rounded text-xs transition"
                   >
-                    + Créer et enregistrer la stratégie
+                    Ajouter au catalogue des stratégies
                   </button>
                 </div>
               </form>
@@ -261,7 +271,9 @@ export default function App() {
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   Insights & Recommandations IA
                 </h3>
-                <span className="text-[10px] text-slate-500">Analyse de la Vélocité de Vente</span>
+                <span className="text-[10px] text-slate-500">
+                  {customStrategies.filter(s => s.active).length} stratégie(s) active(s) dans le moteur
+                </span>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
