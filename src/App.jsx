@@ -7,31 +7,24 @@ export default function App() {
   const [openSpectacles, setOpenSpectacles] = useState({ 1: true, 2: false, 3: false });
   const [appliedYield, setAppliedYield] = useState(false);
 
-  // Paramètres globaux par défaut
+  // Paramètres globaux (pilotés depuis l'espace Producteur)
   const [targetJ5, setTargetJ5] = useState(45);
   const [srPercentage, setSrPercentage] = useState(80);
   const [yieldThreshold, setYieldThreshold] = useState(90);
   const [autoYieldPrice, setAutoYieldPrice] = useState(5);
   const [autoPromoDiscount, setAutoPromoDiscount] = useState(20);
 
-  // Paramètres spécifiques œuvre par œuvre avec indicateur d'héritage (useGlobal: true par défaut)
+  // Paramètres spécifiques œuvre par œuvre (autonomes)
   const [spectacleSettings, setSpectacleSettings] = useState({
-    1: { title: 'Le Misanthrope', baseCost: 38.0, srTarget: 85, alertJ5: 50, useGlobal: false },
-    2: { title: 'Le Dîner de Cons', baseCost: 32.0, srTarget: 75, alertJ5: 40, useGlobal: true },
-    3: { title: 'Fary — Aime', baseCost: 30.0, srTarget: 70, alertJ5: 35, useGlobal: true }
+    1: { title: 'Le Misanthrope', baseCost: 38.0, srTarget: 85, alertJ5: 50 },
+    2: { title: 'Le Dîner de Cons', baseCost: 32.0, srTarget: 75, alertJ5: 40 },
+    3: { title: 'Fary — Aime', baseCost: 30.0, srTarget: 70, alertJ5: 35 }
   });
 
   const handleSpectacleSettingChange = (id, field, value) => {
     setSpectacleSettings(prev => ({
       ...prev,
       [id]: { ...prev[id], [field]: Number(value) }
-    }));
-  };
-
-  const toggleSpectacleGlobalInheritance = (id) => {
-    setSpectacleSettings(prev => ({
-      ...prev,
-      [id]: { ...prev[id], useGlobal: !prev[id].useGlobal }
     }));
   };
 
@@ -130,10 +123,9 @@ export default function App() {
       }
     : spectaclesList.find(s => s.id === Number(selectedSpectacleId)).kpis;
 
-  // Si le spectacle utilise le global, on prend srPercentage, sinon sa cible spécifique
   const activeSrPercentage = selectedSpectacleId === 'all' 
     ? srPercentage 
-    : (spectacleSettings[selectedSpectacleId].useGlobal ? srPercentage : spectacleSettings[selectedSpectacleId].srTarget);
+    : spectacleSettings[selectedSpectacleId].srTarget;
 
   const isSREffectivelyReached = currentData.coverage >= activeSrPercentage;
 
@@ -233,8 +225,13 @@ export default function App() {
             {['Resp. Billetterie', 'Producteur', 'Marketing'].map((role) => (
               <button
                 key={role}
-                onClick={() => setActiveRole(role)}
-                className={`px-3 py-1 rounded-full text-[10px] font-medium transition ${
+                onClick={() => {
+                  setActiveRole(role);
+                  if (role === 'Producteur') {
+                    setActiveTab('Paramètres');
+                  }
+                }}
+                className={`px-3 py-1 rounded-full text-[10px] font-medium transition cursor-pointer ${
                   activeRole === role
                     ? 'bg-emerald-400 text-slate-950 font-semibold shadow'
                     : 'text-slate-400 hover:text-slate-200'
@@ -247,74 +244,80 @@ export default function App() {
         </header>
 
         {activeTab === 'Paramètres' ? (
-          /* ONGLET PARAMÈTRES AVEC HÉRITAGE GLOBAL VS SUR-MESURE */
+          /* GESTION GRANULAIRE DES SPÉCIFICITÉS ŒUVRE PAR ŒUVRE (ET ESPACE PRODUCTEUR SI RÔLE PRODUCTEUR ACTIF) */
           <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-6 space-y-6">
             <div className="flex justify-between items-center border-b border-slate-800 pb-4">
               <div>
-                <h2 className="text-sm font-semibold text-white">⚙️ Configuration des Règles & Spécificités Œuvre par Œuvre</h2>
-                <p className="text-[10px] text-slate-400">Gérez la priorité entre les règles globales de la saison et les exceptions par spectacle.</p>
+                <h2 className="text-sm font-semibold text-white">
+                  {activeRole === 'Producteur' ? '🏛️ Espace Macro-Pilotage Producteur (Saison & Règles Globales)' : '⚙️ Paramétrage Granulaire Œuvre par Œuvre'}
+                </h2>
+                <p className="text-[10px] text-slate-400">
+                  {activeRole === 'Producteur' 
+                    ? 'Pilotez les objectifs macroéconomiques et les seuils de rentabilité de la structure globale.' 
+                    : 'Ajustez de façon autonome les coûts de revient et les objectifs spécifiques de chaque production.'}
+                </p>
               </div>
               <button
                 onClick={() => setActiveTab('Tableau de bord')}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs transition font-medium"
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs transition font-medium cursor-pointer"
               >
                 ← Retour au Tableau de bord
               </button>
             </div>
 
-            {/* 1. Bloc Seuils Globaux */}
-            <div className="space-y-3 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-                  1. Objectifs Financiers & Seuils d'Alerte Globaux (Saison)
-                </h3>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300 font-medium block">
-                    Cible de remplissage minimum à J-5 (%) :
-                  </label>
-                  <input
-                    type="number"
-                    value={targetJ5}
-                    onChange={(e) => setTargetJ5(e.target.value)}
-                    className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
-                  />
-                  <span className="text-[9px] text-slate-500 block">Appliqué par défaut à toutes les productions suivant la règle globale.</span>
+            {/* Si le rôle Producteur est actif, on affiche le bloc macro global de saison */}
+            {activeRole === 'Producteur' && (
+              <div className="space-y-3 bg-[#0E131F] p-4 rounded-lg border border-emerald-500/30">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+                  <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                    Macro-Objectifs Financiers & Seuils Globaux de la Saison
+                  </h3>
                 </div>
+                
+                <div className="grid grid-cols-2 gap-4 pt-1">
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-slate-300 font-medium block">
+                      Cible de remplissage minimum globale à J-5 (%) :
+                    </label>
+                    <input
+                      type="number"
+                      value={targetJ5}
+                      onChange={(e) => setTargetJ5(e.target.value)}
+                      className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
+                    />
+                    <span className="text-[9px] text-slate-500 block">Seuil d'alerte macro de la structure.</span>
+                  </div>
 
-                <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300 font-medium block">
-                    Objectif de Point d'Équilibre global (%) :
-                  </label>
-                  <input
-                    type="number"
-                    value={srPercentage}
-                    onChange={(e) => setSrPercentage(e.target.value)}
-                    className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
-                  />
-                  <span className="text-[9px] text-slate-500 block">Objectif de couverture par défaut pour l'ensemble de la saison.</span>
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-slate-300 font-medium block">
+                      Objectif de Point d'Équilibre global de Saison (%) :
+                    </label>
+                    <input
+                      type="number"
+                      value={srPercentage}
+                      onChange={(e) => setSrPercentage(e.target.value)}
+                      className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
+                    />
+                    <span className="text-[9px] text-slate-500 block">Objectif de couverture des coûts fixes de la saison.</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* 2. Spécificités Économiques avec indicateur d'héritage */}
+            {/* Spécificités Économiques Œuvre par Œuvre (Autonomes) */}
             <div className="space-y-3 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-                  2. Spécificités Économiques Œuvre par Œuvre (Règle d'Héritage)
-                </h3>
-              </div>
+              <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
+                Modèles Économiques Autonomes (Œuvre par Œuvre)
+              </h3>
               <p className="text-[10px] text-slate-400">
-                Chaque spectacle peut soit <strong>hériter des règles globales</strong> de la saison, soit disposer d'un <strong>réglage sur-mesure</strong> (prioritaire).
+                Chaque spectacle dispose de ses propres charges et de son propre objectif de rentabilité, indépendants du global.
               </p>
 
               <div className="space-y-3 pt-2">
                 {Object.keys(spectacleSettings).map((id) => {
                   const spec = spectacleSettings[id];
-                  const currentEffectiveSr = spec.useGlobal ? srPercentage : spec.srTarget;
-                  const netTarget = Math.round((spec.baseCost * (currentEffectiveSr / 100)) * 10) / 10;
+                  const netTarget = Math.round((spec.baseCost * (spec.srTarget / 100)) * 10) / 10;
 
                   return (
                     <div key={id} className="bg-[#131927] border border-slate-800 p-3.5 rounded-lg space-y-3">
@@ -323,16 +326,9 @@ export default function App() {
                           <span className="text-[9px] text-slate-500 uppercase block font-medium">Production #{id}</span>
                           <h4 className="font-bold text-white text-xs">{spec.title}</h4>
                         </div>
-                        <button
-                          onClick={() => toggleSpectacleGlobalInheritance(id)}
-                          className={`text-[10px] px-3 py-1 rounded font-semibold transition cursor-pointer ${
-                            spec.useGlobal 
-                              ? 'bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700' 
-                              : 'bg-amber-500 text-slate-950 shadow hover:bg-amber-400'
-                          }`}
-                        >
-                          {spec.useGlobal ? '🔗 Hérite du Global (' + srPercentage + '%)' : '⚙️ Réglage sur-mesure actif'}
-                        </button>
+                        <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-semibold">
+                          Modèle autonome
+                        </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 items-center">
@@ -347,23 +343,18 @@ export default function App() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] text-slate-300 block font-medium">
-                            Objectif Équilibre spécifique (%) : {spec.useGlobal && <span className="text-slate-500 italic">(Désactivé - Mode global)</span>}
-                          </label>
+                          <label className="text-[10px] text-slate-300 block font-medium">Objectif d'Équilibre spécifique (%) :</label>
                           <input
                             type="number"
-                            disabled={spec.useGlobal}
-                            value={spec.useGlobal ? srPercentage : spec.srTarget}
+                            value={spec.srTarget}
                             onChange={(e) => handleSpectacleSettingChange(id, 'srTarget', e.target.value)}
-                            className={`w-full border rounded px-2.5 py-1.5 text-xs ${
-                              spec.useGlobal ? 'bg-[#0E131F]/40 border-slate-800 text-slate-500 cursor-not-allowed' : 'bg-[#0E131F] border-slate-700 text-white'
-                            }`}
+                            className="w-full bg-[#0E131F] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
                           />
                         </div>
                       </div>
 
                       <div className="text-[9px] text-emerald-400 pt-1">
-                        💡 Prix net cible calculé pour cette œuvre : <strong>~{netTarget} € / billet</strong> ({spec.useGlobal ? 'Basé sur l\'objectif global de saison' : 'Basé sur l\'objectif sur-mesure'})
+                        💡 Prix net cible calculé pour cette œuvre : <strong>~{netTarget} € / billet</strong> (basé sur son objectif de {spec.srTarget}%)
                       </div>
                     </div>
                   );
@@ -371,10 +362,10 @@ export default function App() {
               </div>
             </div>
 
-            {/* 3. Bloc Stratégies Modulaires */}
+            {/* Bloc Stratégies Modulaires */}
             <div className="space-y-4 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
               <div className="flex justify-between items-center">
-                <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">3. Activation des Stratégies de Yield Management</h3>
+                <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Activation des Stratégies de Yield Management</h3>
                 <span className="text-[10px] text-slate-500">
                   {customStrategies.filter(s => s.active).length} sur {customStrategies.length} stratégie(s) active(s)
                 </span>
@@ -407,7 +398,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD COMPLET AVEC INFOBULLES ET SIMULATEUR */
+          /* TABLEAU DE BORD COMPLET */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -496,7 +487,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bloc Insights & Recommandations IA avec infobulle */}
+            {/* Bloc Insights & Recommandations IA */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -504,15 +495,7 @@ export default function App() {
                     <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     Recommandations Intelligentes & Alertes Séances
                   </h3>
-                  <div className="group relative flex items-center cursor-pointer">
-                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong className="text-emerald-400 block mb-1">Valeur ajoutée de l'IA (EventLens) :</strong>
-                      L'intelligence artificielle croise en temps réel la vélocité des ventes et vos seuils pour détecter les risques financiers.
-                    </div>
-                  </div>
                 </div>
-
                 <span className="text-[10px] text-slate-500">
                   {customStrategies.filter(s => s.active).length} stratégie(s) active(s) dans le moteur
                 </span>
@@ -521,24 +504,19 @@ export default function App() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
-                        ALERTE : RISQUE FINANCIER
-                      </span>
-                      <span className="text-[9px] text-slate-500">Jeu. 12 Sept.</span>
-                    </div>
+                    <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase block w-max">
+                      ALERTE : RISQUE FINANCIER
+                    </span>
                     <p className="text-[10px] text-slate-300">
-                      <strong className="text-white">Diagnostic :</strong> Retard de vente à J-5 ({targetJ5}% cible). Jauge : 26% (130/500 pl.).
+                      <strong className="text-white">Diagnostic :</strong> Retard de vente à J-5. Jauge : 26%.
                     </p>
-                    <p className="text-[10px] text-rose-400 font-semibold">
-                      Manque à gagner estimé : -1 850 € Net
-                    </p>
+                    <p className="text-[10px] text-rose-400 font-semibold">Manque à gagner estimé : -1 850 € Net</p>
                   </div>
-                  <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between gap-1">
-                    <span className="text-[9px] text-amber-300 font-medium truncate">👉 Action : 40 places à -{autoPromoDiscount}% sur BilletReduc</span>
+                  <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between">
+                    <span className="text-[9px] text-amber-300 font-medium">👉 Action : 40 places à -{autoPromoDiscount}%</span>
                     <button
                       onClick={() => setAppliedYield(!appliedYield)}
-                      className={`px-2 py-1 rounded text-[9px] font-semibold transition shrink-0 ${appliedYield ? 'bg-emerald-600 text-white' : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'}`}
+                      className={`px-2 py-1 rounded text-[9px] font-semibold transition ${appliedYield ? 'bg-emerald-600 text-white' : 'bg-emerald-500 text-slate-950'}`}
                     >
                       {appliedYield ? '✓ Appliqué' : 'Activer 1-clic'}
                     </button>
@@ -547,29 +525,23 @@ export default function App() {
 
                 <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
-                        OPPORTUNITÉ DE HAUSSE TARIFAIRE
-                      </span>
-                      <span className="text-[9px] text-slate-500">Ven. 13 Sept.</span>
-                    </div>
+                    <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase block w-max">
+                      OPPORTUNITÉ TARIFAIRE
+                    </span>
                     <p className="text-[10px] text-slate-300">
                       <strong className="text-white">Diagnostic :</strong> Forte demande à J-12. Carré Or rempli à {yieldThreshold}%.
                     </p>
                   </div>
                   <div className="pt-2 border-t border-slate-800/60">
-                    <p className="text-[9px] text-emerald-400 font-medium">👉 Action : +{autoYieldPrice} € les 10 dern. places Carré Or.</p>
+                    <p className="text-[9px] text-emerald-400 font-medium">👉 Action : +{autoYieldPrice} € sur 10 dern. places Carré Or.</p>
                   </div>
                 </div>
 
                 <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
-                        SÉANCE SÉCURISÉE & CONFORME
-                      </span>
-                      <span className="text-[9px] text-slate-500">Sam. 14 Sept.</span>
-                    </div>
+                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase block w-max">
+                      SÉANCE SÉCURISÉE
+                    </span>
                     <p className="text-[10px] text-slate-300">
                       <strong className="text-white">Diagnostic :</strong> Ventes conformes. Équilibre atteint à {satCoveragePercentage}%.
                     </p>
@@ -581,28 +553,13 @@ export default function App() {
               </div>
             </div>
 
-            {/* Catalogue Multi-Spectacles avec infobulle */}
+            {/* Catalogue Multi-Spectacles */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-semibold text-white">Catalogue des Représentations & Statut d'Équilibre</h3>
-                  <div className="group relative flex items-center cursor-pointer">
-                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong className="text-emerald-400 block mb-1">Catalogue de Saison :</strong>
-                      Vue d'ensemble de toute la programmation avec le détail des représentations.
-                    </div>
-                  </div>
-                </div>
-                <span className="text-[10px] text-slate-500">{spectaclesList.length} spectacles actifs</span>
-              </div>
-
+              <h3 className="text-xs font-semibold text-white">Catalogue des Représentations & Statut d'Équilibre</h3>
               <div className="space-y-3">
                 {spectaclesList.map((spec) => {
                   const isOpen = openSpectacles[spec.id];
-                  const specSetting = spectacleSettings[spec.id];
-                  const effectiveSpecTarget = specSetting.useGlobal ? srPercentage : specSetting.srTarget;
-
+                  const specSrTarget = spectacleSettings[spec.id].srTarget;
                   return (
                     <div key={spec.id} className="border border-slate-800/80 rounded-lg overflow-hidden bg-[#0E131F]">
                       <button
@@ -610,26 +567,13 @@ export default function App() {
                         className="w-full p-3 flex justify-between items-center hover:bg-slate-800/40 transition text-left cursor-pointer"
                       >
                         <div>
-                          <span className="text-[9px] text-slate-500 uppercase tracking-wider block">
-                            {spec.category} — Cible équilibre : {effectiveSpecTarget}% ({specSetting.useGlobal ? 'Hérité du global' : 'Sur-mesure'})
-                          </span>
+                          <span className="text-[9px] text-slate-500 uppercase tracking-wider block">{spec.category} (Cible équilibre : {specSrTarget}%)</span>
                           <h4 className="font-semibold text-white text-sm">{spec.title}</h4>
                           <p className="text-[10px] text-slate-500">{spec.dates}</p>
                         </div>
                         <div className="flex items-center gap-6 text-[10px]">
-                          <div className="text-right">
-                            <span className="text-slate-500 block">Remplissage global</span>
-                            <span className="text-white font-bold text-xs">{spec.fillingRate}</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-slate-500 block">Billets vendus</span>
-                            <span className="text-white font-bold text-xs">{spec.soldTickets.toLocaleString()}</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-slate-500 block">Places restantes</span>
-                            <span className="text-amber-400 font-bold text-xs">{spec.remainingTickets.toLocaleString()}</span>
-                          </div>
-                          <span className="text-slate-500 text-xs ml-2">{isOpen ? '▲' : '▼'}</span>
+                          <span className="text-white font-bold text-xs">{spec.fillingRate} rempli</span>
+                          <span className="text-slate-500 text-xs">{isOpen ? '▲' : '▼'}</span>
                         </div>
                       </button>
 
@@ -641,12 +585,12 @@ export default function App() {
                               <div key={rep.id} className="p-3 flex justify-between items-center bg-[#131927]/40">
                                 <div>
                                   <span className="font-medium text-white block">{rep.date}</span>
-                                  <span className="text-slate-400">Revenu net moyen : <strong>{rep.rmsNet} €</strong> | Objectif équilibre requis : <strong>{calculatedSRPrice} €</strong> | Jauge : {rep.seats}</span>
+                                  <span className="text-slate-400">Revenu net moyen : <strong>{rep.rmsNet} €</strong> | Objectif : <strong>{calculatedSRPrice} €</strong></span>
                                 </div>
                                 <span className={`px-2 py-0.5 rounded text-[9px] font-semibold ${
                                   isReached ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                                 }`}>
-                                  {isReached ? '✓ Séance équilibrée — Objectif atteint' : '⚠ Action requise — Sous l\'objectif d\'équilibre'}
+                                  {isReached ? '✓ Séance équilibrée' : '⚠ Action requise'}
                                 </span>
                               </div>
                             );
@@ -659,19 +603,9 @@ export default function App() {
               </div>
             </div>
 
-            {/* Simulateur de Yield ("Mode Et Si ?") avec infobulle */}
+            {/* Simulateur de Yield */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-semibold text-white">Simulateur d'Impact Tarifaire ("Mode Et Si ?")</h3>
-                <div className="group relative flex items-center cursor-pointer">
-                  <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                    <strong className="text-emerald-400 block mb-1">Mode Simulation ("Et Si ?") :</strong>
-                    Testez en temps réel l'impact financier de vos décisions avant de les appliquer.
-                  </div>
-                </div>
-              </div>
-
+              <h3 className="text-xs font-semibold text-white">Simulateur d'Impact Tarifaire ("Mode Et Si ?")</h3>
               <div className="grid grid-cols-3 gap-4 items-center">
                 <div className="col-span-2 space-y-3">
                   <div>
@@ -683,21 +617,10 @@ export default function App() {
                       <div className="bg-emerald-400 h-full rounded-full" style={{ width: '60%' }}></div>
                     </div>
                   </div>
-                  <div>
-                    <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                      <span>Volume de places basculées en promotion</span>
-                      <span className="text-slate-300">40 places</span>
-                    </div>
-                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-emerald-400 h-full rounded-full" style={{ width: '40%' }}></div>
-                    </div>
-                  </div>
                 </div>
-
                 <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg text-center space-y-1">
                   <span className="text-[9px] text-slate-500 uppercase tracking-wider block">Impact financier net estimé</span>
                   <div className="text-lg font-bold text-emerald-400">+9 550 €</div>
-                  <span className="text-[8px] text-slate-500 block">Projection calculée en temps réel selon les ventes en cours</span>
                 </div>
               </div>
             </div>
