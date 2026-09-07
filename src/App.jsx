@@ -269,30 +269,66 @@ export default function App() {
         ) : (
           /* VUE TABLEAU DE BORD COMPLET (Par défaut) */
           <>
-            {/* 4 cartes KPIs explicites */}
+            {/* 4 cartes KPIs explicites avec infobulles */}
             <div className="grid grid-cols-4 gap-4">
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Revenu Net Moyen / Billet</span>
+              {/* KPI 1 */}
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-slate-400 font-medium">Revenu Net Moyen / Billet</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Revenu Net Moyen :</strong> Moyenne nette réelle encaissée par billet après déduction des commissions, comparée à votre objectif cible.
+                    </div>
+                  </div>
+                </div>
                 <div className="text-xl font-bold text-white">31.20 € <span className="text-[10px] font-normal text-slate-500">/ cible 30.00 €</span></div>
                 <p className="text-[9px] text-emerald-400">+4% au-dessus des prévisions</p>
               </div>
 
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Point d'Équilibre (Rentabilité)</span>
+              {/* KPI 2 */}
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-slate-400 font-medium">Point d'Équilibre (Rentabilité)</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Point d'Équilibre :</strong> Indique si la billetterie globale couvre les coûts fixes nécessaires pour atteindre la rentabilité (point mort).
+                    </div>
+                  </div>
+                </div>
                 <div className={`text-xl font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
                   {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({effectiveCoverage}% / cible {srPercentage}%)
                 </div>
                 <p className="text-[9px] text-slate-500">Couverture globale des coûts fixes</p>
               </div>
 
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Coût d'Acquisition (CAC)</span>
+              {/* KPI 3 */}
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-slate-400 font-medium">Coût d'Acquisition (CAC)</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Coût d'Acquisition (CAC) :</strong> Dépense marketing moyenne engagée pour vendre un billet. Surveillé pour préserver la marge nette.
+                    </div>
+                  </div>
+                </div>
                 <div className="text-xl font-bold text-amber-400">4.80 € / billet</div>
                 <p className="text-[9px] text-amber-500/80">Frais marketing sous surveillance</p>
               </div>
 
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Taux d'Annulation Net</span>
+              {/* KPI 4 */}
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-slate-400 font-medium">Taux d'Annulation Net</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Taux d'Annulation Net :</strong> Pourcentage de billets remboursés ou annulés sur le total des ventes. Un taux optimal reste sous les 5%.
+                    </div>
+                  </div>
+                </div>
                 <div className="text-xl font-bold text-white">2.4%</div>
                 <p className="text-[9px] text-emerald-400">Niveau optimal (&lt; 5%)</p>
               </div>
@@ -400,10 +436,19 @@ export default function App() {
               </div>
             </div>
 
-            {/* Catalogue Événements & Représentations */}
+            {/* Catalogue Événements & Représentations avec infobulle */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
-                <h3 className="text-xs font-semibold text-white">Catalogue des Représentations & Statut d'Équilibre</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-semibold text-white">Catalogue des Représentations & Statut d'Équilibre</h3>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong className="text-emerald-400 block mb-1">Catalogue & Séances :</strong>
+                      Suivi détaillé représentation par représentation. Chaque ligne compare le revenu net moyen de la séance à l'objectif d'équilibre requis pour indiquer instantanément si une action corrective est nécessaire.
+                    </div>
+                  </div>
+                </div>
                 <span className="text-[10px] text-slate-500">1 spectacle actif</span>
               </div>
 
