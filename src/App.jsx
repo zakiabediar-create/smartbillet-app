@@ -13,24 +13,23 @@ export default function App() {
   const [autoYieldPrice, setAutoYieldPrice] = useState(5);
   const [autoPromoDiscount, setAutoPromoDiscount] = useState(20);
 
-  // Calcul dynamique du Seuil de Rentabilité en euros basé sur le %
+  // Calcul dynamique du Seuil de Rentabilité en euros par billet
   const baseCostPrice = 37.50; 
   const calculatedSRPrice = Math.round((baseCostPrice * (srPercentage / 100)) * 10) / 10;
 
-  // Calcul dynamique de la couverture de la 3ème séance (Sam. 14 Sept, RMS = 35 €) par rapport au SR configuré
+  // Calculs dynamiques pour les insights
   const satRepresentationRMS = 35.0;
   const satCoveragePercentage = Math.round((satRepresentationRMS / calculatedSRPrice) * 100);
 
-  // Calcul de la couverture réelle globale atteinte (simulée ici à 82% de couverture effective)
   const effectiveCoverage = 82;
   const isSREffectivelyReached = effectiveCoverage >= srPercentage;
 
-  // Liste des représentations avec leur RMS Net pour calcul dynamique du statut
+  // Liste des représentations
   const representations = [
-    { id: 1, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places' },
-    { id: 2, date: 'Ven. 13 Sept. — 20h00', rmsNet: 32.0, seats: '310/500 places' },
-    { id: 3, date: 'Sam. 14 Sept. — 20h30', rmsNet: satRepresentationRMS, seats: '480/500 places' },
-    { id: 4, date: 'Dim. 15 Sept. — 15h00', rmsNet: 33.4, seats: '240/500 places' }
+    { id: 1, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places vendues' },
+    { id: 2, date: 'Ven. 13 Sept. — 20h00', rmsNet: 32.0, seats: '310/500 places vendues' },
+    { id: 3, date: 'Sam. 14 Sept. — 20h30', rmsNet: satRepresentationRMS, seats: '480/500 places vendues' },
+    { id: 4, date: 'Dim. 15 Sept. — 15h00', rmsNet: 33.4, seats: '240/500 places vendues' }
   ];
 
   // Stratégies modulaires
@@ -109,7 +108,7 @@ export default function App() {
         </div>
 
         <div className="text-[10px] text-slate-500 px-2">
-          Espace de pilotage billetterie
+          Pilotage et Yield Management
         </div>
       </aside>
 
@@ -118,7 +117,7 @@ export default function App() {
         <header className="flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold text-white tracking-tight">SmartBillet x EventLens</h1>
-            <p className="text-[10px] text-slate-400">Pilotage par représentation & Moteur de Yielding AI</p>
+            <p className="text-[10px] text-slate-400">Assistant intelligent de pilotage de la billetterie et des tarifs</p>
           </div>
 
           <div className="flex items-center gap-1 bg-[#131927] p-1 rounded-full border border-slate-800">
@@ -144,8 +143,8 @@ export default function App() {
           <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-6 space-y-6">
             <div className="flex justify-between items-center border-b border-slate-800 pb-4">
               <div>
-                <h2 className="text-sm font-semibold text-white">⚙️ Gestion & Sélection des Stratégies de Yielding</h2>
-                <p className="text-[10px] text-slate-400">Configurez les seuils globaux et activez vos règles décisionnelles métiers en direct.</p>
+                <h2 className="text-sm font-semibold text-white">⚙️ Configuration des Règles & Objectifs de Billetterie</h2>
+                <p className="text-[10px] text-slate-400">Ajustez vos seuils d'alerte et activez les automatismes de tarification selon votre saison.</p>
               </div>
               <button
                 onClick={() => setActiveTab('Tableau de bord')}
@@ -155,54 +154,41 @@ export default function App() {
               </button>
             </div>
 
-            {/* Bloc Seuils Globaux avec Bulles d'information */}
+            {/* Bloc Seuils Globaux avec explications claires */}
             <div className="space-y-3 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
               <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-                1. Seuils d'Alerte & Objectifs Globaux
+                1. Objectifs Financiers & Seuils d'Alerte Globaux
               </h3>
               
               <div className="grid grid-cols-2 gap-4">
                 {/* Champ 1 */}
                 <div className="space-y-1 relative">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] text-slate-300 font-medium flex items-center gap-1.5">
-                      Cible de remplissage minimum à J-5 (%) :
-                      <div className="group relative flex items-center cursor-pointer">
-                        <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                        <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-48 bg-slate-900 text-slate-200 text-[9px] p-2 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                          Taux de remplissage visé à 5 jours de la représentation. En dessous de ce seuil, l'IA déclenche une alerte de sous-performance financière.
-                        </div>
-                      </div>
-                    </label>
-                  </div>
+                  <label className="text-[11px] text-slate-300 font-medium block">
+                    Cible de remplissage minimum à J-5 (%) :
+                  </label>
                   <input
                     type="number"
                     value={targetJ5}
                     onChange={(e) => setTargetJ5(e.target.value)}
                     className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
                   />
+                  <span className="text-[9px] text-slate-500 block">En dessous de ce taux à 5 jours de la séance, l'IA déclenche une alerte.</span>
                 </div>
 
                 {/* Champ 2 */}
                 <div className="space-y-1 relative">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] text-slate-300 font-medium flex items-center gap-1.5">
-                      Seuil de Rentabilité (SR) de référence (%) :
-                      <div className="group relative flex items-center cursor-pointer">
-                        <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                        <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-48 bg-slate-900 text-slate-200 text-[9px] p-2 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                          Pourcentage des coûts fixes à couvrir impérativement pour atteindre l'équilibre financier (point mort).
-                        </div>
-                      </div>
-                    </label>
-                  </div>
+                  <label className="text-[11px] text-slate-300 font-medium block">
+                    Objectif de Point d'Équilibre / Rentabilité (%) :
+                  </label>
                   <input
                     type="number"
                     value={srPercentage}
                     onChange={(e) => setSrPercentage(e.target.value)}
                     className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
                   />
-                  <span className="text-[9px] text-slate-500 block">SR calculé en direct : {calculatedSRPrice} € par place</span>
+                  <span className="text-[9px] text-slate-500 block">
+                    Soit un prix net moyen de <strong>{calculatedSRPrice} €</strong> à obtenir par billet pour couvrir les coûts.
+                  </span>
                 </div>
               </div>
             </div>
@@ -210,7 +196,7 @@ export default function App() {
             {/* Bloc Sélection et Activation des Stratégies Modulaires */}
             <div className="space-y-4 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
               <div className="flex justify-between items-center">
-                <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">2. Sélection & Activation des Stratégies Modulaires</h3>
+                <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">2. Activation des Stratégies de Yield Management</h3>
                 <span className="text-[10px] text-slate-500">
                   {customStrategies.filter(s => s.active).length} sur {customStrategies.length} stratégie(s) active(s)
                 </span>
@@ -237,7 +223,7 @@ export default function App() {
                     </div>
                     <div className="text-[10px] text-slate-400 space-y-0.5 border-t border-slate-800/60 pt-2">
                       <p>🔍 <strong>Déclencheur :</strong> {strat.trigger}</p>
-                      <p>⚡ <strong>Action :</strong> {strat.action}</p>
+                      <p>⚡ <strong>Action automatique :</strong> {strat.action}</p>
                     </div>
                   </div>
                 ))}
@@ -245,25 +231,25 @@ export default function App() {
 
               {/* Formulaire de création d'une nouvelle stratégie */}
               <form onSubmit={handleCreateStrategy} className="pt-4 border-t border-slate-800 space-y-3">
-                <h4 className="text-[11px] font-semibold text-white">+ Créer une règle sur-mesure :</h4>
+                <h4 className="text-[11px] font-semibold text-white">+ Créer une règle personnalisée :</h4>
                 <div className="grid grid-cols-3 gap-3">
                   <input
                     type="text"
-                    placeholder="Nom (ex: Promo Last Minute)"
+                    placeholder="Nom (ex: Promo de dernière minute)"
                     value={newStratName}
                     onChange={(e) => setNewStratName(e.target.value)}
                     className="bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
                   />
                   <input
                     type="text"
-                    placeholder="Déclencheur (ex: J-2 & < 50%)"
+                    placeholder="Condition (ex: J-2 & < 50%)"
                     value={newStratTrigger}
                     onChange={(e) => setNewStratTrigger(e.target.value)}
                     className="bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
                   />
                   <input
                     type="text"
-                    placeholder="Action (ex: Brader -30%)"
+                    placeholder="Action (ex: Baisser de -30%)"
                     value={newStratAction}
                     onChange={(e) => setNewStratAction(e.target.value)}
                     className="bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
@@ -283,32 +269,32 @@ export default function App() {
         ) : (
           /* VUE TABLEAU DE BORD COMPLET (Par défaut) */
           <>
-            {/* 4 cartes KPIs */}
+            {/* 4 cartes KPIs explicites */}
             <div className="grid grid-cols-4 gap-4">
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">RMT Net (Cible vs Réel)</span>
-                <div className="text-xl font-bold text-white">31.20 € <span className="text-[10px] font-normal text-slate-500">/ 30.00 €</span></div>
-                <p className="text-[9px] text-emerald-400">+4% au-dessus de la cible</p>
+                <span className="text-[10px] text-slate-400 font-medium">Revenu Net Moyen / Billet</span>
+                <div className="text-xl font-bold text-white">31.20 € <span className="text-[10px] font-normal text-slate-500">/ cible 30.00 €</span></div>
+                <p className="text-[9px] text-emerald-400">+4% au-dessus des prévisions</p>
               </div>
 
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Seuil Rentabilité (SR)</span>
+                <span className="text-[10px] text-slate-400 font-medium">Point d'Équilibre (Rentabilité)</span>
                 <div className={`text-xl font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
                   {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({effectiveCoverage}% / cible {srPercentage}%)
                 </div>
-                <p className="text-[9px] text-slate-500">Couverture des coûts fixes</p>
+                <p className="text-[9px] text-slate-500">Couverture globale des coûts fixes</p>
               </div>
 
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Coût Acquisition (CAC)</span>
+                <span className="text-[10px] text-slate-400 font-medium">Coût d'Acquisition (CAC)</span>
                 <div className="text-xl font-bold text-amber-400">4.80 € / billet</div>
-                <p className="text-[9px] text-amber-500/80">Sous surveillance</p>
+                <p className="text-[9px] text-amber-500/80">Frais marketing sous surveillance</p>
               </div>
 
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Taux Annulation Net (TAN)</span>
+                <span className="text-[10px] text-slate-400 font-medium">Taux d'Annulation Net</span>
                 <div className="text-xl font-bold text-white">2.4%</div>
-                <p className="text-[9px] text-emerald-400">Optimal (&lt; 5%)</p>
+                <p className="text-[9px] text-emerald-400">Niveau optimal (&lt; 5%)</p>
               </div>
             </div>
 
@@ -317,7 +303,7 @@ export default function App() {
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-semibold text-white flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Insights & Recommandations IA
+                  Recommandations Intelligentes & Alertes Séances
                 </h3>
                 <span className="text-[10px] text-slate-500">
                   {customStrategies.filter(s => s.active).length} stratégie(s) active(s) dans le moteur
@@ -330,23 +316,23 @@ export default function App() {
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
                       <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
-                        ALERTE RISQUE FINANCIER
+                        ALERTE : RISQUE FINANCIER
                       </span>
                       <span className="text-[9px] text-slate-500">Jeu. 12 Sept.</span>
                     </div>
                     <p className="text-[10px] text-slate-300">
-                      <strong className="text-white">Constat :</strong> Retard J-5 ({targetJ5}% cible). SR non sécurisé. Jauge : 26% (130/500 pl.).
+                      <strong className="text-white">Diagnostic :</strong> Retard de vente à J-5 ({targetJ5}% cible). Seuil non sécurisé. Jauge : 26% (130/500 pl.).
                     </p>
                     <p className="text-[10px] text-rose-400 font-semibold">
                       Manque à gagner estimé : -1 850 € Net
                     </p>
                     <p className="text-[9px] text-slate-400">
-                      <strong className="text-slate-300">Levier :</strong> Transfert contingent Catégorie 2 (Vitesse : 4 pl./j vs cible 18 pl./j).
+                      <strong className="text-slate-300">Analyse :</strong> Vitesse trop faible (4 pl./j vs 18 pl./j requis).
                     </p>
                   </div>
 
                   <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between gap-1">
-                    <span className="text-[9px] text-amber-300 font-medium truncate">👉 Plan d'action : 40 sièges BilletReduc (-{autoPromoDiscount}%)</span>
+                    <span className="text-[9px] text-amber-300 font-medium truncate">👉 Action : Lancer 40 places à -{autoPromoDiscount}% sur BilletReduc</span>
                     <button
                       onClick={() => setAppliedYield(!appliedYield)}
                       className={`px-2 py-1 rounded text-[9px] font-semibold transition shrink-0 ${
@@ -363,42 +349,42 @@ export default function App() {
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
                       <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
-                        OPPORTUNITÉ YIELDING POSITIF
+                        OPPORTUNITÉ DE HAUSSE TARIFAIRE
                       </span>
                       <span className="text-[9px] text-slate-500">Ven. 13 Sept.</span>
                     </div>
                     <p className="text-[10px] text-slate-300">
-                      <strong className="text-white">Constat :</strong> Forte demande J-12. Carré Or complet à {yieldThreshold}%. Vélocité x2.5.
+                      <strong className="text-white">Diagnostic :</strong> Forte demande à J-12. Carré Or rempli à {yieldThreshold}%. Vélocité x2.5.
                     </p>
                     <p className="text-[9px] text-slate-400">
-                      <strong className="text-slate-300">Levier :</strong> Ajustement sous-tarification sur sièges premium.
+                      <strong className="text-slate-300">Analyse :</strong> Le prix actuel est trop bas face à la forte demande.
                     </p>
                   </div>
 
                   <div className="pt-2 border-t border-slate-800/60">
-                    <p className="text-[9px] text-emerald-400 font-medium">👉 Plan d'action : +{autoYieldPrice} € sur 10 der. Carré Or & basculer 15 sièges Cat 1.</p>
+                    <p className="text-[9px] text-emerald-400 font-medium">👉 Action : Augmenter de +{autoYieldPrice} € les 10 dern. places Carré Or.</p>
                   </div>
                 </div>
 
-                {/* Carte 3 : Trajectoire Conforme (Dynamique avec satCoveragePercentage) */}
+                {/* Carte 3 : Trajectoire Conforme */}
                 <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
                       <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
-                        TRAJECTOIRE CONFORME
+                        SÉANCE SÉCURISÉE & CONFORME
                       </span>
                       <span className="text-[9px] text-slate-500">Sam. 14 Sept.</span>
                     </div>
                     <p className="text-[10px] text-slate-300">
-                      <strong className="text-white">Constat :</strong> Conforme au plan de charge. SR atteint à {satCoveragePercentage}%. RMS Net : {satRepresentationRMS} €.
+                      <strong className="text-white">Diagnostic :</strong> Ventes conformes au prévisionnel. Équilibre atteint à {satCoveragePercentage}%. Revenu moyen : {satRepresentationRMS} €.
                     </p>
                     <p className="text-[9px] text-slate-400">
-                      <strong className="text-slate-300">Levier :</strong> Maximisation marge sans commission réseau.
+                      <strong className="text-slate-300">Analyse :</strong> La représentation se remplit sans aide extérieure.
                     </p>
                   </div>
 
                   <div className="pt-2 border-t border-slate-800/60">
-                    <p className="text-[9px] text-slate-300 font-medium">👉 Plan d'action : Fermer réseaux tiers, ventes guichet/site propre (0% comm.).</p>
+                    <p className="text-[9px] text-slate-300 font-medium">👉 Action : Stopper les réseaux tiers, privilégier la vente directe (0% de commission).</p>
                   </div>
                 </div>
               </div>
@@ -407,8 +393,8 @@ export default function App() {
             {/* Catalogue Événements & Représentations */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
-                <h3 className="text-xs font-semibold text-white">Catalogue Événements & Représentations</h3>
-                <span className="text-[10px] text-slate-500">1 événement actif</span>
+                <h3 className="text-xs font-semibold text-white">Catalogue des Représentations & Statut d'Équilibre</h3>
+                <span className="text-[10px] text-slate-500">1 spectacle actif</span>
               </div>
 
               <div className="border border-slate-800/80 rounded-lg overflow-hidden bg-[#0E131F]">
@@ -423,16 +409,16 @@ export default function App() {
                   </div>
                   <div className="flex items-center gap-6 text-[10px]">
                     <div className="text-right">
-                      <span className="text-slate-500 block">Remplissage</span>
+                      <span className="text-slate-500 block">Remplissage global</span>
                       <span className="text-white font-bold text-xs">26%</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-slate-500 block">Vendus</span>
-                      <span className="text-white font-bold text-xs">1260</span>
+                      <span className="text-slate-500 block">Billets vendus</span>
+                      <span className="text-white font-bold text-xs">1 260</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-slate-500 block">Restants</span>
-                      <span className="text-amber-400 font-bold text-xs">3540</span>
+                      <span className="text-slate-500 block">Places restantes</span>
+                      <span className="text-amber-400 font-bold text-xs">3 540</span>
                     </div>
                     <span className="text-slate-500 text-xs ml-2">{isAccordionOpen ? '▲' : '▼'}</span>
                   </div>
@@ -446,14 +432,14 @@ export default function App() {
                         <div key={rep.id} className="p-3 flex justify-between items-center bg-[#131927]/40">
                           <div>
                             <span className="font-medium text-white block">{rep.date}</span>
-                            <span className="text-slate-400">RMS Net: {rep.rmsNet} € | SR: {calculatedSRPrice} € | Représentation: {rep.seats}</span>
+                            <span className="text-slate-400">Revenu net moyen : <strong>{rep.rmsNet} €</strong> | Objectif équilibre requis : <strong>{calculatedSRPrice} €</strong> | Jauge : {rep.seats}</span>
                           </div>
-                          <span className={`px-2 py-0.5 rounded text-[9px] ${
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-semibold ${
                             isReached 
                               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                               : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                           }`}>
-                            {isReached ? 'Seuil de rentabilité atteint — Action disponible' : 'Sous le seuil de rentabilité — Action requise'}
+                            {isReached ? '✓ Séance équilibrée — Objectif atteint' : '⚠ Action requise — Sous l\'objectif d\'équilibre'}
                           </span>
                         </div>
                       );
@@ -465,12 +451,12 @@ export default function App() {
 
             {/* Bloc Simulateur de Yield */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
-              <h3 className="text-xs font-semibold text-white">Simulateur de Yield ("Mode Et Si ?")</h3>
+              <h3 className="text-xs font-semibold text-white">Simulateur d'Impact Tarifaire ("Mode Et Si ?")</h3>
               <div className="grid grid-cols-3 gap-4 items-center">
                 <div className="col-span-2 space-y-3">
                   <div>
                     <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                      <span>Ajustement prix VIP (+{autoYieldPrice}%)</span>
+                      <span>Hausse tarifaire sur les places VIP (+{autoYieldPrice}%)</span>
                       <span className="text-emerald-400">+{autoYieldPrice}%</span>
                     </div>
                     <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -479,7 +465,7 @@ export default function App() {
                   </div>
                   <div>
                     <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                      <span>Quota de report de places</span>
+                      <span>Volume de places basculées en promotion</span>
                       <span className="text-slate-300">40 places</span>
                     </div>
                     <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -489,9 +475,9 @@ export default function App() {
                 </div>
 
                 <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg text-center space-y-1">
-                  <span className="text-[9px] text-slate-500 uppercase tracking-wider block">Impact projeté sur le Chiffre d'Affaires</span>
+                  <span className="text-[9px] text-slate-500 uppercase tracking-wider block">Impact financier net estimé</span>
                   <div className="text-lg font-bold text-emerald-400">+9 550 €</div>
-                  <span className="text-[8px] text-slate-500 block">Projection calculée sur la base des réservations en cours</span>
+                  <span className="text-[8px] text-slate-500 block">Projection calculée en temps réel selon les ventes en cours</span>
                 </div>
               </div>
             </div>
