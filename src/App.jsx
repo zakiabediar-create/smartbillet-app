@@ -6,17 +6,21 @@ export default function App() {
   const [isAccordionOpen, setIsAccordionOpen] = useState(true);
   const [appliedYield, setAppliedYield] = useState(false);
 
-  // Paramètres globaux
+  // Paramètres globaux dynamiques
   const [targetJ5, setTargetJ5] = useState(45);
   const [srPercentage, setSrPercentage] = useState(80);
   const [yieldThreshold, setYieldThreshold] = useState(90);
   const [autoYieldPrice, setAutoYieldPrice] = useState(5);
   const [autoPromoDiscount, setAutoPromoDiscount] = useState(20);
 
-  // Stratégies modulaires et personnalisées
+  // Calcul dynamique du Seuil de Rentabilité en euros basé sur le % (ex: 80% de 37.50 € de base = 30 €)
+  const baseCostPrice = 37.50; 
+  const calculatedSRPrice = Math.round((baseCostPrice * (srPercentage / 100)) * 10) / 10;
+
+  // Stratégies modulaires
   const [customStrategies, setCustomStrategies] = useState([
-    { id: 1, name: 'Palier Temporel Standard', trigger: 'J-5 ou moins & jauge < 45%', action: 'Remise -20% sur BilletReduc', active: true, type: 'Modulaire' },
-    { id: 2, name: 'Yielding Premium Carré Or', trigger: 'Carré Or > 90%', action: 'Hausse tarifaire +5 €', active: true, type: 'Modulaire' },
+    { id: 1, name: 'Palier Temporel Standard', trigger: `J-5 ou moins & jauge < ${targetJ5}%`, action: `Remise -{autoPromoDiscount}% sur BilletReduc`, active: true, type: 'Modulaire' },
+    { id: 2, name: 'Yielding Premium Carré Or', trigger: `Carré Or > ${yieldThreshold}%`, action: `Hausse tarifaire +{autoYieldPrice} €`, active: true, type: 'Modulaire' },
     { id: 3, name: 'Optimisation Canaux & Marge', trigger: 'Seuil de rentabilité atteint à 100%', action: 'Fermeture des réseaux tiers (0% commission)', active: false, type: 'Modulaire' },
     { id: 4, name: 'Surclassement Dynamique', trigger: 'Catégorie 1 saturée à 95%', action: 'Basculement automatique de sièges vers Carré Or', active: false, type: 'Modulaire' }
   ]);
@@ -125,7 +129,7 @@ export default function App() {
             <div className="flex justify-between items-center border-b border-slate-800 pb-4">
               <div>
                 <h2 className="text-sm font-semibold text-white">⚙️ Gestion & Sélection des Stratégies de Yielding</h2>
-                <p className="text-[10px] text-slate-400">Configurez les seuils globaux et activez vos règles décisionnelles métiers.</p>
+                <p className="text-[10px] text-slate-400">Configurez les seuils globaux et activez vos règles décisionnelles métiers en direct.</p>
               </div>
               <button
                 onClick={() => setActiveTab('Tableau de bord')}
@@ -137,12 +141,12 @@ export default function App() {
 
             {/* Bloc Seuils Globaux avec Bulles d'information */}
             <div className="space-y-3 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
-              <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span>1. Seuils d'Alerte & Objectifs Globaux</span>
+              <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                1. Seuils d'Alerte & Objectifs Globaux
               </h3>
               
               <div className="grid grid-cols-2 gap-4">
-                {/* Champ 1 avec infobulle */}
+                {/* Champ 1 */}
                 <div className="space-y-1 relative">
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] text-slate-300 font-medium flex items-center gap-1.5">
@@ -163,7 +167,7 @@ export default function App() {
                   />
                 </div>
 
-                {/* Champ 2 avec infobulle */}
+                {/* Champ 2 */}
                 <div className="space-y-1 relative">
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] text-slate-300 font-medium flex items-center gap-1.5">
@@ -171,7 +175,7 @@ export default function App() {
                       <div className="group relative flex items-center cursor-pointer">
                         <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                         <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-48 bg-slate-900 text-slate-200 text-[9px] p-2 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                          Pourcentage des coûts fixes (location, cachets, technique) à couvrir impérativement pour atteindre l'équilibre financier (point mort).
+                          Pourcentage des coûts fixes à couvrir impérativement pour atteindre l'équilibre financier (point mort).
                         </div>
                       </div>
                     </label>
@@ -182,6 +186,7 @@ export default function App() {
                     onChange={(e) => setSrPercentage(e.target.value)}
                     className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
                   />
+                  <span className="text-[9px] text-slate-500 block">SR calculé en direct : {calculatedSRPrice} € par place</span>
                 </div>
               </div>
             </div>
@@ -323,7 +328,7 @@ export default function App() {
                   </div>
 
                   <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between gap-1">
-                    <span className="text-[9px] text-amber-300 font-medium truncate">👉 Plan d'action : 40 sièges BilletReduc (-20%)</span>
+                    <span className="text-[9px] text-amber-300 font-medium truncate">👉 Plan d'action : 40 sièges BilletReduc (-{autoPromoDiscount}%)</span>
                     <button
                       onClick={() => setAppliedYield(!appliedYield)}
                       className={`px-2 py-1 rounded text-[9px] font-semibold transition shrink-0 ${
@@ -353,7 +358,7 @@ export default function App() {
                   </div>
 
                   <div className="pt-2 border-t border-slate-800/60">
-                    <p className="text-[9px] text-emerald-400 font-medium">👉 Plan d'action : +5 € sur 10 der. Carré Or & basculer 15 sièges Cat 1.</p>
+                    <p className="text-[9px] text-emerald-400 font-medium">👉 Plan d'action : +{autoYieldPrice} € sur 10 der. Carré Or & basculer 15 sièges Cat 1.</p>
                   </div>
                 </div>
 
@@ -381,7 +386,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Catalogue Événements & Représentations */}
+            {/* Catalogue Événements & Représentations (dynamique avec SR) */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-semibold text-white">Catalogue Événements & Représentations</h3>
@@ -420,7 +425,7 @@ export default function App() {
                     <div className="p-3 flex justify-between items-center bg-[#131927]/40">
                       <div>
                         <span className="font-medium text-white block">Jeu. 12 Sept. — 19h00</span>
-                        <span className="text-slate-400">RMS Net: 21.5 € | SR: 30 € | Représentation: 130/500 places</span>
+                        <span className="text-slate-400">RMS Net: 21.5 € | SR: {calculatedSRPrice} € | Représentation: 130/500 places</span>
                       </div>
                       <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[9px]">
                         Sous le seuil de rentabilité — Action requise
@@ -430,7 +435,7 @@ export default function App() {
                     <div className="p-3 flex justify-between items-center bg-[#131927]/20">
                       <div>
                         <span className="font-medium text-white block">Ven. 13 Sept. — 20h00</span>
-                        <span className="text-slate-400">RMS Net: 32 € | SR: 30 € | Représentation: 310/500 places</span>
+                        <span className="text-slate-400">RMS Net: 32 € | SR: {calculatedSRPrice} € | Représentation: 310/500 places</span>
                       </div>
                       <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px]">
                         Seuil de rentabilité atteint — Action disponible
@@ -440,7 +445,7 @@ export default function App() {
                     <div className="p-3 flex justify-between items-center bg-[#131927]/20">
                       <div>
                         <span className="font-medium text-white block">Sam. 14 Sept. — 20h30</span>
-                        <span className="text-slate-400">RMS Net: 35 € | SR: 30 € | Représentation: 480/500 places</span>
+                        <span className="text-slate-400">RMS Net: 35 € | SR: {calculatedSRPrice} € | Représentation: 480/500 places</span>
                       </div>
                       <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px]">
                         Seuil de rentabilité atteint — Action disponible
@@ -450,7 +455,7 @@ export default function App() {
                     <div className="p-3 flex justify-between items-center bg-[#131927]/20">
                       <div>
                         <span className="font-medium text-white block">Dim. 15 Sept. — 15h00</span>
-                        <span className="text-slate-400">RMS Net: 33.4 € | SR: 30 € | Représentation: 240/500 places</span>
+                        <span className="text-slate-400">RMS Net: 33.4 € | SR: {calculatedSRPrice} € | Représentation: 240/500 places</span>
                       </div>
                       <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[9px]">
                         Sous le seuil de rentabilité — Action requise
@@ -468,8 +473,8 @@ export default function App() {
                 <div className="col-span-2 space-y-3">
                   <div>
                     <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                      <span>Ajustement prix VIP (+15%)</span>
-                      <span className="text-emerald-400">+15%</span>
+                      <span>Ajustement prix VIP (+{autoYieldPrice}%)</span>
+                      <span className="text-emerald-400">+{autoYieldPrice}%</span>
                     </div>
                     <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                       <div className="bg-emerald-400 h-full rounded-full" style={{ width: '60%' }}></div>
