@@ -1,432 +1,311 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from './supabaseClient';
-import { 
-  Layers, ChevronDown, ChevronUp, Zap, Info, 
-  LayoutDashboard, Calendar, ShieldAlert, Compass, Sliders, Settings,
-  Search, Upload, ArrowUpRight
-} from 'lucide-react';
+import React, { useState } from 'react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [events, setEvents] = useState([]);
-  const [expandedEvent, setExpandedEvent] = useState(null);
-  const [activeRole, setActiveRole] = useState("billetterie");
-
-  // États du simulateur
-  const [vipAdjustment, setVipAdjustment] = useState(10);
-  const [quotaTransfer, setQuotaTransfer] = useState(30);
-
-  useEffect(() => {
-    fetchEventsAndSessions();
-  }, []);
-
-  async function fetchEventsAndSessions() {
-    const { data: eventsData, error: eventsError } = await supabase.from('events').select('*');
-    if (eventsError) console.error(eventsError);
-
-    const { data: sessionsData, error: sessionsError } = await supabase.from('sessions').select('*');
-    if (sessionsError) console.error(sessionsError);
-
-    if (eventsData && sessionsData) {
-      const merged = eventsData.map(evt => ({
-        ...evt,
-        sessions: sessionsData.filter(s => s.event_id === evt.id)
-      }));
-      setEvents(merged);
-      if (merged.length > 0) setExpandedEvent(merged[0].id);
-    }
-  }
-
-  function getYieldRecommendation(session, totalCapacity) {
-    const fillRate = totalCapacity > 0 ? (session.sold_capacity / totalCapacity) * 100 : 0;
-    const rms = Number(session.rms_net || 0);
-    const sr = Number(session.seuil_rentabilite || 0);
-
-    if (fillRate >= 100) {
-      return {
-        label: "Complet — Liste d'attente",
-        badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-        action: "Ouvrir une nouvelle date ou jauge supplémentaire."
-      };
-    }
-    if (fillRate >= 80) {
-      return {
-        label: "Forte demande — Yield +10% recommandé",
-        badge: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-        action: "Ajuster la catégorie 1 à +10% sur les 48h à venir."
-      };
-    }
-    if (rms < sr || fillRate < 40) {
-      return {
-        label: "Sous le seuil de rentabilité — Action requise",
-        badge: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-        action: "Lancer une offre Flash (-20%) ou campagne ciblée."
-      };
-    }
-    return {
-      label: "Rythme nominal",
-      badge: "bg-slate-800 text-slate-300 border-slate-700",
-      action: "Conserver la grille tarifaire actuelle."
-    };
-  }
+  const [activeRole, setActiveRole] = useState('Resp. Billetterie');
+  const [activeTab, setActiveTab] = useState('Tableau de bord');
+  const [isAccordionOpen, setIsAccordionOpen] = useState(true);
+  const [appliedYield, setAppliedYield] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
-      
-      {/* 1. SIDEBAR LATÉRALE */}
-      <aside className="w-64 bg-slate-900 border-r border-slate-800 p-6 flex flex-col justify-between hidden md:flex">
-        <div className="space-y-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500 rounded-xl text-slate-950">
-              <Layers className="w-6 h-6" />
+    <div className="min-h-screen bg-[#0B0F17] text-slate-100 font-sans flex text-xs">
+      {/* Sidebar Gauche */}
+      <aside className="w-56 bg-[#0E131F] border-r border-slate-800/80 flex flex-col justify-between p-4 shrink-0">
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 px-1 py-1">
+            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-base">
+              ⌘
             </div>
             <div>
-              <h1 className="font-bold text-white tracking-tight">SmartBillet</h1>
-              <p className="text-[10px] text-emerald-400 font-medium">x EventLens AI</p>
+              <h2 className="font-bold text-white text-sm tracking-wide">SmartBillet</h2>
+              <span className="text-[9px] text-slate-500 tracking-widest block uppercase">x EventLens AI</span>
             </div>
           </div>
 
-          <nav className="space-y-1.5">
+          <nav className="space-y-1 text-slate-400">
             {[
-              { id: "dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-              { id: "events", label: "Événements", icon: Calendar },
-              { id: "audit", label: "Audit & Sécurité", icon: ShieldAlert },
-              { id: "veille", label: "Veille Concurrentielle", icon: Compass },
-              { id: "simulator", label: "Simulateur", icon: Sliders },
-              { id: "settings", label: "Paramètres", icon: Settings }
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition ${
-                    isActive ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
-                </button>
-              );
-            })}
+              { id: 'Tableau de bord', icon: '🎛️' },
+              { id: 'Événements', icon: '🎟️' },
+              { id: 'Audit & Sécurité', icon: '🛡️' },
+              { id: 'Veille Concurrentielle', icon: '👁️' },
+              { id: 'Simulateur', icon: '🎚️' },
+              { id: 'Paramètres', icon: '⚙️' },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition font-medium text-[11px] ${
+                  activeTab === item.id
+                    ? 'bg-slate-800/80 text-white font-semibold'
+                    : 'hover:bg-slate-800/40 hover:text-slate-200'
+                }`}
+              >
+                <span className="text-sm">{item.icon}</span>
+                {item.id}
+              </button>
+            ))}
           </nav>
         </div>
 
-        <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-          <p className="text-xs font-medium text-slate-300">Statut Supabase</p>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-[11px] text-slate-400">Connecté</span>
-          </div>
+        <div className="text-[10px] text-slate-500 px-2">
+          Espace de pilotage billetterie
         </div>
       </aside>
 
-      {/* ZONE PRINCIPALE */}
-      <main className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto">
-
-        {/* HEADER / SÉLECTEUR DE RÔLE */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800">
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <header className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-              <Layers className="text-emerald-400 w-6 h-6" />
-              SmartBillet x EventLens
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">Pilotage par représentation & Moteur de Yielding AI</p>
+            <h1 className="text-xl font-bold text-white tracking-tight">SmartBillet x EventLens</h1>
+            <p className="text-[10px] text-slate-400">Pilotage par représentation & Moteur de Yielding AI</p>
           </div>
 
-          <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-            {[
-              { id: "billetterie", label: "Resp. Billetterie" },
-              { id: "producteur", label: "Producteur" },
-              { id: "marketing", label: "Marketing" }
-            ].map((role) => (
+          <div className="flex items-center gap-1 bg-[#131927] p-1 rounded-full border border-slate-800">
+            {['Resp. Billetterie', 'Producteur', 'Marketing'].map((role) => (
               <button
-                key={role.id}
-                onClick={() => setActiveRole(role.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                  activeRole === role.id ? "bg-emerald-500 text-slate-950 font-semibold shadow-md" : "text-slate-400 hover:text-white"
+                key={role}
+                onClick={() => setActiveRole(role)}
+                className={`px-3 py-1 rounded-full text-[10px] font-medium transition ${
+                  activeRole === role
+                    ? 'bg-emerald-400 text-slate-950 font-semibold shadow'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                {role.label}
+                {role}
               </button>
             ))}
           </div>
-        </div>
+        </header>
 
-        {/* 2. CARTES KPIS MACRO */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl relative group">
-            <div className="flex justify-between items-start">
-              <span className="text-xs font-medium text-slate-400">RMT Net (Cible vs Réel)</span>
-              <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 cursor-pointer" />
-            </div>
-            <div className="text-2xl font-bold text-white mt-2">31.20 € <span className="text-xs font-normal text-emerald-400">/ 30.00 €</span></div>
-            <p className="text-[11px] text-emerald-400 mt-1">+4% au-dessus de la cible</p>
-            <div className="absolute top-full left-0 mt-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-xs text-slate-200 rounded-xl shadow-xl border border-slate-700 z-20 pointer-events-none">
-              Revenu Moyen par Transaction nette d'annulations.
-            </div>
+        {/* 4 cartes KPIs */}
+        <div className="grid grid-cols-4 gap-4">
+          <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
+            <span className="text-[10px] text-slate-400 font-medium">RMT Net (Cible vs Réel)</span>
+            <div className="text-xl font-bold text-white">31.20 € <span className="text-[10px] font-normal text-slate-500">/ 30.00 €</span></div>
+            <p className="text-[9px] text-emerald-400">+4% au-dessus de la cible</p>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl relative group">
-            <div className="flex justify-between items-start">
-              <span className="text-xs font-medium text-slate-400">Seuil Rentabilité (SR)</span>
-              <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 cursor-pointer" />
-            </div>
-            <div className="text-2xl font-bold text-emerald-400 mt-2">Atteint (82%)</div>
-            <p className="text-[11px] text-slate-400 mt-1">Couverture des coûts fixes</p>
-            <div className="absolute top-full left-0 mt-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-xs text-slate-200 rounded-xl shadow-xl border border-slate-700 z-20 pointer-events-none">
-              Prix moyen ou jauge minimale pour amortir la représentation.
-            </div>
+          <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
+            <span className="text-[10px] text-slate-400 font-medium">Seuil Rentabilité (SR)</span>
+            <div className="text-xl font-bold text-emerald-400">Atteint (82%)</div>
+            <p className="text-[9px] text-slate-500">Couverture des coûts fixes</p>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl relative group">
-            <div className="flex justify-between items-start">
-              <span className="text-xs font-medium text-slate-400">Coût Acquisition (CAC)</span>
-              <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 cursor-pointer" />
-            </div>
-            <div className="text-2xl font-bold text-amber-400 mt-2">4.80 € / billet</div>
-            <p className="text-[11px] text-amber-400/80 mt-1">Sous surveillance</p>
-            <div className="absolute top-full left-0 mt-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-xs text-slate-200 rounded-xl shadow-xl border border-slate-700 z-20 pointer-events-none">
-              Dépense marketing divisée par le nombre de places vendues.
-            </div>
+          <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
+            <span className="text-[10px] text-slate-400 font-medium">Coût Acquisition (CAC)</span>
+            <div className="text-xl font-bold text-amber-400">4.80 € / billet</div>
+            <p className="text-[9px] text-amber-500/80">Sous surveillance</p>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl relative group">
-            <div className="flex justify-between items-start">
-              <span className="text-xs font-medium text-slate-400">Taux Annulation Net (TAN)</span>
-              <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 cursor-pointer" />
-            </div>
-            <div className="text-2xl font-bold text-white mt-2">2.4%</div>
-            <p className="text-[11px] text-emerald-400 mt-1">Optimal (&lt; 5%)</p>
-            <div className="absolute top-full left-0 mt-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-xs text-slate-200 rounded-xl shadow-xl border border-slate-700 z-20 pointer-events-none">
-              Pourcentage de billets remboursés ou annulés.
-            </div>
+          <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
+            <span className="text-[10px] text-slate-400 font-medium">Taux Annulation Net (TAN)</span>
+            <div className="text-xl font-bold text-white">2.4%</div>
+            <p className="text-[9px] text-emerald-400">Optimal (&lt; 5%)</p>
           </div>
         </div>
 
-        {/* INSIGHTS IA */}
-        <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border border-emerald-500/20 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Zap className="w-5 h-5 text-emerald-400" />
-            <h2 className="font-bold text-white text-base">Insights & Recommandations IA</h2>
+        {/* Bloc Insights & Recommandations IA mis à jour avec le vocabulaire métier */}
+        <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xs font-semibold text-white flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Insights & Recommandations IA
+            </h3>
+            <span className="text-[10px] text-slate-500">Analyse de la Vélocité de Vente</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
-              <span className="text-[10px] font-semibold text-rose-400 uppercase">Alerte SR</span>
-              <p className="text-xs text-slate-200 mt-1 font-medium">Jeu. 12 Sept : RMS à 21.5 € (SR à 30 €).</p>
-              <p className="text-xs text-slate-400 mt-2"><strong className="text-emerald-400">Action :</strong> Offre Flash -20% sur 48h.</p>
-            </div>
-            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
-              <span className="text-[10px] font-semibold text-amber-400 uppercase">Yielding</span>
-              <p className="text-xs text-slate-200 mt-1 font-medium">Ven. 13 Sept : Remplissage à 97%.</p>
-              <p className="text-xs text-slate-400 mt-2"><strong className="text-emerald-400">Action :</strong> Catégorie 1 à +10%.</p>
-            </div>
-            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
-              <span className="text-[10px] font-semibold text-emerald-400 uppercase">Optimisation</span>
-              <p className="text-xs text-slate-200 mt-1 font-medium">Sam. 14 Sept : Séance complète.</p>
-              <p className="text-xs text-slate-400 mt-2"><strong className="text-emerald-400">Action :</strong> Ouvrir liste d'attente.</p>
-            </div>
-          </div>
-        </div>
 
-        {/* VUE ÉVÉNEMENT & MULTI-SÉANCES EXISTANTE */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold text-white">Catalogue Événements & Représentations</h2>
-          {events.map((evt) => {
-            const isExpanded = expandedEvent === evt.id;
-            const soldCapacity = evt.sessions.reduce((acc, s) => acc + s.sold_capacity, 0);
-            const totalRevenue = evt.sessions.reduce((acc, s) => acc + Number(s.revenue), 0);
-            const fillRate = evt.total_capacity > 0 ? Math.round((soldCapacity / evt.total_capacity) * 100) : 0;
-            const remainingSeats = evt.total_capacity - soldCapacity;
+          <div className="grid grid-cols-3 gap-3">
+            {/* Carte 1 : Alerte Risque Financier */}
+            <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
+                    ALERTE RISQUE FINANCIER
+                  </span>
+                  <span className="text-[9px] text-slate-500">Jeu. 12 Sept.</span>
+                </div>
+                <p className="text-[10px] text-slate-300">
+                  <strong className="text-white">Constat :</strong> Retard J-5 (-19 pts vs histo). SR à 80% non sécurisé. Jauge : 26% (130/500 pl.).
+                </p>
+                <p className="text-[10px] text-rose-400 font-semibold">
+                  Manque à gagner estimé : -1 850 € Net
+                </p>
+                <p className="text-[9px] text-slate-400">
+                  <strong className="text-slate-300">Levier :</strong> Transfert contingent Catégorie 2 (Vitesse : 4 pl./j vs cible 18 pl./j).
+                </p>
+              </div>
 
-            return (
-              <div key={evt.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-                <div 
-                  className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 cursor-pointer hover:bg-slate-800/50 transition"
-                  onClick={() => setExpandedEvent(isExpanded ? null : evt.id)}
+              <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between gap-1">
+                <span className="text-[9px] text-amber-300 font-medium truncate">👉 Plan d'action : 40 sièges BilletReduc (-20%)</span>
+                <button
+                  onClick={() => setAppliedYield(!appliedYield)}
+                  className={`px-2 py-1 rounded text-[9px] font-semibold transition shrink-0 ${
+                    appliedYield ? 'bg-emerald-600 text-white' : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
+                  }`}
                 >
+                  {appliedYield ? '✓ Appliqué' : 'Activer 1-clic'}
+                </button>
+              </div>
+            </div>
+
+            {/* Carte 2 : Opportunité Yielding Positif */}
+            <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
+                    OPPORTUNITÉ YIELDING POSITIF
+                  </span>
+                  <span className="text-[9px] text-slate-500">Ven. 13 Sept.</span>
+                </div>
+                <p className="text-[10px] text-slate-300">
+                  <strong className="text-white">Constat :</strong> Forte demande J-12. Carré Or complet à 90%. Vélocité x2.5 vs moyenne.
+                </p>
+                <p className="text-[9px] text-slate-400">
+                  <strong className="text-slate-300">Levier :</strong> Ajustement sous-tarification sur sièges premium.
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-slate-800/60">
+                <p className="text-[9px] text-emerald-400 font-medium">👉 Plan d'action : +5 € sur 10 der. Carré Or & basculer 15 sièges Cat 1.</p>
+              </div>
+            </div>
+
+            {/* Carte 3 : Trajectoire Conforme */}
+            <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
+                    TRAJECTOIRE CONFORME
+                  </span>
+                  <span className="text-[9px] text-slate-500">Sam. 14 Sept.</span>
+                </div>
+                <p className="text-[10px] text-slate-300">
+                  <strong className="text-white">Constat :</strong> Conforme au plan de charge. Seuil de Rentabilité atteint à 102%. RMS Net : 24.50 €.
+                </p>
+                <p className="text-[9px] text-slate-400">
+                  <strong className="text-slate-300">Levier :</strong> Maximisation marge sans commission réseau.
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-slate-800/60">
+                <p className="text-[9px] text-slate-300 font-medium">👉 Plan d'action : Fermer réseaux tiers, ventes guichet/site propre (0% comm.).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Catalogue Événements & Représentations (Garder la structure initiale complète avec les représentations) */}
+        <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xs font-semibold text-white">Catalogue Événements & Représentations</h3>
+            <span className="text-[10px] text-slate-500">1 événement actif</span>
+          </div>
+
+          <div className="border border-slate-800/80 rounded-lg overflow-hidden bg-[#0E131F]">
+            <button
+              onClick={() => setIsAccordionOpen(!isAccordionOpen)}
+              className="w-full p-3 flex justify-between items-center hover:bg-slate-800/40 transition text-left"
+            >
+              <div>
+                <span className="text-[9px] text-slate-500 uppercase tracking-wider block">Théâtre classique</span>
+                <h4 className="font-semibold text-white text-sm">Le Misanthrope</h4>
+                <p className="text-[10px] text-slate-500">12 sept. — 04 oct. 2026</p>
+              </div>
+              <div className="flex items-center gap-6 text-[10px]">
+                <div className="text-right">
+                  <span className="text-slate-500 block">Remplissage</span>
+                  <span className="text-white font-bold text-xs">26%</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-slate-500 block">Vendus</span>
+                  <span className="text-white font-bold text-xs">1260</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-slate-500 block">Restants</span>
+                  <span className="text-amber-400 font-bold text-xs">3540</span>
+                </div>
+                <span className="text-slate-500 text-xs ml-2">{isAccordionOpen ? '▲' : '▼'}</span>
+              </div>
+            </button>
+
+            {isAccordionOpen && (
+              <div className="border-t border-slate-800/80 divide-y divide-slate-800/60 text-[10px]">
+                <div className="p-3 flex justify-between items-center bg-[#131927]/40">
                   <div>
-                    <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                      {evt.venue_type}
-                    </span>
-                    <h2 className="text-xl font-bold text-white mt-2">{evt.title}</h2>
-                    <p className="text-slate-400 text-xs mt-1">{evt.date_range}</p>
+                    <span className="font-medium text-white block">Jeu. 12 Sept. — 19h00</span>
+                    <span className="text-slate-400">RMS Net: 21.5 € | SR: 30 € | Représentation: 130/500 places</span>
                   </div>
-
-                  <div className="grid grid-cols-3 gap-6">
-                    {activeRole === "billetterie" && (
-                      <>
-                        <div>
-                          <div className="text-xs text-slate-400">Remplissage</div>
-                          <div className="text-lg font-bold text-white">{fillRate}%</div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-slate-400">Vendus</div>
-                          <div className="text-lg font-bold text-white">{soldCapacity}</div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-slate-400">Restants</div>
-                          <div className="text-lg font-bold text-amber-400">{remainingSeats}</div>
-                        </div>
-                      </>
-                    )}
-
-                    {activeRole === "producteur" && (
-                      <>
-                        <div>
-                          <div className="text-xs text-slate-400 flex items-center gap-1">
-                            Recette totale
-                            <div className="relative group cursor-pointer">
-                              <Info className="w-3 h-3 text-slate-500 hover:text-slate-300" />
-                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-slate-800 text-[11px] text-slate-200 rounded-lg shadow-xl border border-slate-700 z-10 pointer-events-none">
-                                Somme des chiffre d'affaires bruts générés.
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-lg font-bold text-emerald-400">{totalRevenue.toLocaleString()} €</div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-slate-400">Remplissage moy.</div>
-                          <div className="text-lg font-bold text-white">{fillRate}%</div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-slate-400">Sessions</div>
-                          <div className="text-lg font-bold text-white">{evt.sessions.length}</div>
-                        </div>
-                      </>
-                    )}
-
-                    {activeRole === "marketing" && (
-                      <>
-                        <div>
-                          <div className="text-xs text-slate-400">Objectif Jauge</div>
-                          <div className="text-lg font-bold text-white">{fillRate}% / 85%</div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-slate-400">Actions requises</div>
-                          <div className="text-lg font-bold text-rose-400">
-                            {evt.sessions.filter(s => (s.sold_capacity / (evt.total_capacity / evt.sessions.length)) < 0.4).length} alerte(s)
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-slate-400">Recette Cumulée</div>
-                          <div className="text-lg font-bold text-slate-200">{totalRevenue.toLocaleString()} €</div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-end">
-                    {isExpanded ? <ChevronUp className="text-slate-400" /> : <ChevronDown className="text-slate-400" />}
-                  </div>
+                  <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[9px]">
+                    Sous le seuil de rentabilité — Action requise
+                  </span>
                 </div>
 
-                {isExpanded && (
-                  <div className="bg-slate-950/60 border-t border-slate-800 p-6 space-y-4">
-                    {evt.sessions.map((s) => {
-                      const sessionCapacity = evt.total_capacity / evt.sessions.length;
-                      const rec = getYieldRecommendation(s, sessionCapacity);
-
-                      return (
-                        <div key={s.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                          <div>
-                            <div className="text-sm font-semibold text-white">{s.session_date}</div>
-                            <div className="text-xs text-slate-400 mt-1 flex gap-4">
-                              <span className="flex items-center gap-1">
-                                RMS Net : <strong className="text-slate-200">{s.rms_net} €</strong>
-                                <div className="relative group cursor-pointer">
-                                  <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300" />
-                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-52 p-2 bg-slate-800 text-[11px] text-slate-200 rounded-lg shadow-xl border border-slate-700 z-10 pointer-events-none">
-                                    <strong>Recette Moyenne par Siège :</strong> Recette nette divisée par le nombre de places vendues.
-                                  </div>
-                                </div>
-                              </span>
-
-                              <span className="flex items-center gap-1">
-                                Seuil Rentabilité : <strong className="text-slate-200">{s.seuil_rentabilite} €</strong>
-                                <div className="relative group cursor-pointer">
-                                  <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300" />
-                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-56 p-2 bg-slate-800 text-[11px] text-slate-200 rounded-lg shadow-xl border border-slate-700 z-10 pointer-events-none">
-                                    Prix moyen minimum par billet nécessaire pour amortir les coûts de la représentation.
-                                  </div>
-                                </div>
-                              </span>
-
-                              <span>Vendus : <strong className="text-slate-200">{s.sold_capacity} places</strong></span>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col items-start md:items-end gap-1">
-                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg border ${rec.badge} flex items-center gap-1.5`}>
-                              <Zap className="w-3.5 h-3.5" />
-                              {rec.label}
-                            </span>
-                            <span className="text-[11px] text-slate-400 italic">
-                              Action : {rec.action}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                <div className="p-3 flex justify-between items-center bg-[#131927]/20">
+                  <div>
+                    <span className="font-medium text-white block">Ven. 13 Sept. — 20h00</span>
+                    <span className="text-slate-400">RMS Net: 32 € | SR: 30 € | Représentation: 310/500 places</span>
                   </div>
-                )}
+                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px]">
+                    Seuil de rentabilité atteint — Action disponible
+                  </span>
+                </div>
+
+                <div className="p-3 flex justify-between items-center bg-[#131927]/20">
+                  <div>
+                    <span className="font-medium text-white block">Sam. 14 Sept. — 20h30</span>
+                    <span className="text-slate-400">RMS Net: 35 € | SR: 30 € | Représentation: 480/500 places</span>
+                  </div>
+                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px]">
+                    Seuil de rentabilité atteint — Action disponible
+                  </span>
+                </div>
+
+                <div className="p-3 flex justify-between items-center bg-[#131927]/20">
+                  <div>
+                    <span className="font-medium text-white block">Dim. 15 Sept. — 15h00</span>
+                    <span className="text-slate-400">RMS Net: 33.4 € | SR: 30 € | Représentation: 240/500 places</span>
+                  </div>
+                  <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[9px]">
+                    Sous le seuil de rentabilité — Action requise
+                  </span>
+                </div>
               </div>
-            );
-          })}
+            )}
+          </div>
         </div>
 
-        {/* 4. SIMULATEUR DE YIELD ("MODE ET SI ?") */}
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-6">
-          <div className="flex items-center gap-2">
-            <Sliders className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-lg font-bold text-white">Simulateur de Yield ("Mode Et Si ?")</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
+        {/* Bloc Simulateur de Yield */}
+        <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
+          <h3 className="text-xs font-semibold text-white">Simulateur de Yield ("Mode Et Si ?")</h3>
+          <div className="grid grid-cols-3 gap-4 items-center">
+            <div className="col-span-2 space-y-3">
               <div>
-                <div className="flex justify-between text-xs text-slate-300 mb-2">
-                  <span>Ajustement prix VIP (+/- %)</span>
-                  <span className="font-bold text-emerald-400">+{vipAdjustment}%</span>
+                <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                  <span>Ajustement prix VIP (+15%)</span>
+                  <span className="text-emerald-400">+15%</span>
                 </div>
-                <input 
-                  type="range" 
-                  min="-20" 
-                  max="30" 
-                  value={vipAdjustment} 
-                  onChange={(e) => setVipAdjustment(Number(e.target.value))}
-                  className="w-full accent-emerald-400 bg-slate-800 h-2 rounded-lg cursor-pointer"
-                />
+                <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-emerald-400 h-full rounded-full" style={{ width: '60%' }}></div>
+                </div>
               </div>
-
               <div>
-                <div className="flex justify-between text-xs text-slate-300 mb-2">
+                <div className="flex justify-between text-[10px] text-slate-400 mb-1">
                   <span>Quota de report de places</span>
-                  <span className="font-bold text-emerald-400">{quotaTransfer} sièges</span>
+                  <span className="text-slate-300">40 places</span>
                 </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={quotaTransfer} 
-                  onChange={(e) => setQuotaTransfer(Number(e.target.value))}
-                  className="w-full accent-emerald-400 bg-slate-800 h-2 rounded-lg cursor-pointer"
-                />
+                <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-emerald-400 h-full rounded-full" style={{ width: '40%' }}></div>
+                </div>
               </div>
             </div>
 
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
-              <span className="text-xs text-slate-400 font-medium">Impact projeté sur le Chiffre d'Affaires</span>
-              <div className="text-3xl font-bold text-emerald-400 my-2">
-                +{(vipAdjustment * 850 + quotaTransfer * 35).toLocaleString()} €
-              </div>
-              <p className="text-[11px] text-slate-400">Projection calculée sur la base des réservations en cours.</p>
+            <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg text-center space-y-1">
+              <span className="text-[9px] text-slate-500 uppercase tracking-wider block">Impact projeté sur le Chiffre d'Affaires</span>
+              <div className="text-lg font-bold text-emerald-400">+9 550 €</div>
+              <span className="text-[8px] text-slate-500 block">Projection calculée sur la base des réservations en cours</span>
             </div>
           </div>
         </div>
-
-      </main>
+      </div>
     </div>
   );
 }
