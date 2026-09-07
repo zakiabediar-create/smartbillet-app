@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 export default function App() {
   const [activeRole, setActiveRole] = useState('Resp. Billetterie');
   const [activeTab, setActiveTab] = useState('Tableau de bord');
-  // Gestion de l'ouverture des accordéons par spectacle (par ID)
+  // État du spectacle sélectionné ('all' pour la saison, ou l'ID du spectacle)
+  const [selectedSpectacleId, setSelectedSpectacleId] = useState('all');
+  
   const [openSpectacles, setOpenSpectacles] = useState({ 1: true, 2: false, 3: false });
   const [appliedYield, setAppliedYield] = useState(false);
 
@@ -18,27 +20,29 @@ export default function App() {
   const baseCostPrice = 37.50; 
   const calculatedSRPrice = Math.round((baseCostPrice * (srPercentage / 100)) * 10) / 10;
 
-  // Calculs dynamiques pour les insights
-  const satRepresentationRMS = 35.0;
-  const satCoveragePercentage = Math.round((satRepresentationRMS / calculatedSRPrice) * 100);
-
-  const effectiveCoverage = 82;
-  const isSREffectivelyReached = effectiveCoverage >= srPercentage;
-
-  // Catalogue complet des spectacles et de leurs représentations
+  // Catalogue complet des spectacles avec leurs KPIs spécifiques
   const spectaclesList = [
     {
       id: 1,
       category: 'Théâtre classique',
       title: 'Le Misanthrope',
       dates: '12 sept. — 04 oct. 2026',
-      fillingRate: '26%',
+      fillingRate: 26,
       soldTickets: 1260,
       remainingTickets: 3540,
+      kpis: {
+        rmsNet: '26.80 €',
+        rmsTarget: '30.00 €',
+        rmsComment: '-10% sous la cible',
+        coverage: 72,
+        cac: '5.20 € / billet',
+        cacStatus: 'Frais marketing élevés',
+        cancellation: '3.1%'
+      },
       representations: [
         { id: 101, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places vendues' },
         { id: 102, date: 'Ven. 13 Sept. — 20h00', rmsNet: 32.0, seats: '310/500 places vendues' },
-        { id: 103, date: 'Sam. 14 Sept. — 20h30', rmsNet: satRepresentationRMS, seats: '480/500 places vendues' },
+        { id: 103, date: 'Sam. 14 Sept. — 20h30', rmsNet: 35.0, seats: '480/500 places vendues' },
         { id: 104, date: 'Dim. 15 Sept. — 15h00', rmsNet: 33.4, seats: '240/500 places vendues' }
       ]
     },
@@ -47,9 +51,18 @@ export default function App() {
       category: 'Comédie',
       title: 'Le Dîner de Cons',
       dates: '08 oct. — 30 oct. 2026',
-      fillingRate: '68%',
+      fillingRate: 68,
       soldTickets: 3100,
       remainingTickets: 1450,
+      kpis: {
+        rmsNet: '34.50 €',
+        rmsTarget: '32.00 €',
+        rmsComment: '+8% au-dessus des prévisions',
+        coverage: 88,
+        cac: '4.10 € / billet',
+        cacStatus: 'Maîtrisé',
+        cancellation: '2.0%'
+      },
       representations: [
         { id: 201, date: 'Mer. 08 Oct. — 20h30', rmsNet: 34.0, seats: '420/500 places vendues' },
         { id: 202, date: 'Jeu. 09 Oct. — 20h30', rmsNet: 38.5, seats: '480/500 places vendues' },
@@ -61,15 +74,40 @@ export default function App() {
       category: 'Humour / Seul-en-scène',
       title: 'Fary — Aime',
       dates: '05 nov. — 20 nov. 2026',
-      fillingRate: '91%',
+      fillingRate: 91,
       soldTickets: 4550,
       remainingTickets: 450,
+      kpis: {
+        rmsNet: '41.20 €',
+        rmsTarget: '35.00 €',
+        rmsComment: '+17% forte marge',
+        coverage: 114,
+        cac: '2.90 € / billet',
+        cacStatus: 'Optimal (zéro pub tierce)',
+        cancellation: '1.2%'
+      },
       representations: [
         { id: 301, date: 'Jeu. 05 Nov. — 20h00', rmsNet: 42.0, seats: '490/500 places vendues' },
         { id: 302, date: 'Ven. 06 Nov. — 20h00', rmsNet: 44.5, seats: '500/500 places vendues (Complet)' }
       ]
     }
   ];
+
+  // Détermination des KPIs affichés (soit agrégés pour 'all', soit spécifiques au spectacle sélectionné)
+  const currentData = selectedSpectacleId === 'all' 
+    ? {
+        title: 'Vue Globale (Toute la Saison)',
+        rmsNet: '31.20 €',
+        rmsTarget: '30.00 €',
+        rmsComment: '+4% au-dessus des prévisions',
+        coverage: 82,
+        cac: '4.80 € / billet',
+        cacStatus: 'Frais marketing sous surveillance',
+        cancellation: '2.4%'
+      }
+    : spectaclesList.find(s => s.id === Number(selectedSpectacleId)).kpis;
+
+  const isSREffectivelyReached = currentData.coverage >= srPercentage;
 
   const toggleSpectacleAccordion = (id) => {
     setOpenSpectacles(prev => ({ ...prev, [id]: !prev[id] }));
@@ -312,7 +350,39 @@ export default function App() {
         ) : (
           /* VUE TABLEAU DE BORD COMPLET (Par défaut) */
           <>
-            {/* 4 cartes KPIs explicites avec infobulles */}
+            {/* Sélecteur de Spectacle pour filtrer dynamiquement les KPIs */}
+            <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-slate-400 font-medium">🎭 Filtrer le tableau de bord par spectacle :</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedSpectacleId('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    selectedSpectacleId === 'all'
+                      ? 'bg-emerald-500 text-slate-950 shadow'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  Vue Globale (Saison)
+                </button>
+                {spectaclesList.map((spec) => (
+                  <button
+                    key={spec.id}
+                    onClick={() => setSelectedSpectacleId(spec.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                      selectedSpectacleId === spec.id
+                        ? 'bg-emerald-500 text-slate-950 shadow'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    {spec.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 4 cartes KPIs dynamiques selon le spectacle sélectionné */}
             <div className="grid grid-cols-4 gap-4">
               {/* KPI 1 */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
@@ -325,8 +395,8 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-                <div className="text-xl font-bold text-white">31.20 € <span className="text-[10px] font-normal text-slate-500">/ cible 30.00 €</span></div>
-                <p className="text-[9px] text-emerald-400">+4% au-dessus des prévisions</p>
+                <div className="text-xl font-bold text-white">{currentData.rmsNet} <span className="text-[10px] font-normal text-slate-500">/ cible {currentData.rmsTarget}</span></div>
+                <p className="text-[9px] text-emerald-400">{currentData.rmsComment}</p>
               </div>
 
               {/* KPI 2 */}
@@ -336,12 +406,12 @@ export default function App() {
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Point d'Équilibre :</strong> Indique si la billetterie globale couvre les coûts fixes nécessaires pour atteindre la rentabilité (point mort).
+                      <strong>Point d'Équilibre :</strong> Indique si la billetterie couvre les coûts fixes nécessaires pour atteindre la rentabilité (point mort).
                     </div>
                   </div>
                 </div>
                 <div className={`text-xl font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
-                  {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({effectiveCoverage}% / cible {srPercentage}%)
+                  {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({currentData.coverage}% / cible {srPercentage}%)
                 </div>
                 <p className="text-[9px] text-slate-500">Couverture globale des coûts fixes</p>
               </div>
@@ -353,12 +423,12 @@ export default function App() {
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Coût d'Acquisition (CAC) :</strong> Dépense marketing moyenne engagée pour vendre un billet. Surveillé pour préserver la marge nette.
+                      <strong>Coût d'Acquisition (CAC) :</strong> Dépense marketing moyenne engagée pour vendre un billet.
                     </div>
                   </div>
                 </div>
-                <div className="text-xl font-bold text-amber-400">4.80 € / billet</div>
-                <p className="text-[9px] text-amber-500/80">Frais marketing sous surveillance</p>
+                <div className="text-xl font-bold text-amber-400">{currentData.cac}</div>
+                <p className="text-[9px] text-amber-500/80">{currentData.cacStatus}</p>
               </div>
 
               {/* KPI 4 */}
@@ -368,11 +438,11 @@ export default function App() {
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Taux d'Annulation Net :</strong> Pourcentage de billets remboursés ou annulés sur le total des ventes. Un taux optimal reste sous les 5%.
+                      <strong>Taux d'Annulation Net :</strong> Pourcentage de billets remboursés ou annulés sur le total des ventes.
                     </div>
                   </div>
                 </div>
-                <div className="text-xl font-bold text-white">2.4%</div>
+                <div className="text-xl font-bold text-white">{currentData.cancellation}</div>
                 <p className="text-[9px] text-emerald-400">Niveau optimal (&lt; 5%)</p>
               </div>
             </div>
@@ -389,7 +459,7 @@ export default function App() {
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
                       <strong className="text-emerald-400 block mb-1">Valeur ajoutée de l'IA (EventLens) :</strong>
-                      L'intelligence artificielle croise en temps réel la vélocité des ventes, l'historique de remplissage et vos seuils pour détecter les risques financiers avant qu'ils ne surviennent et proposer des actions correctives automatisées.
+                      L'intelligence artificielle croise en temps réel la vélocité des ventes et vos seuils pour détecter les risques financiers.
                     </div>
                   </div>
                 </div>
@@ -414,9 +484,6 @@ export default function App() {
                     </p>
                     <p className="text-[10px] text-rose-400 font-semibold">
                       Manque à gagner estimé : -1 850 € Net
-                    </p>
-                    <p className="text-[9px] text-slate-400">
-                      <strong className="text-slate-300">Analyse :</strong> Vitesse trop faible (4 pl./j vs 18 pl./j requis).
                     </p>
                   </div>
 
@@ -445,9 +512,6 @@ export default function App() {
                     <p className="text-[10px] text-slate-300">
                       <strong className="text-white">Diagnostic :</strong> Forte demande à J-12. Carré Or rempli à {yieldThreshold}%. Vélocité x2.5.
                     </p>
-                    <p className="text-[9px] text-slate-400">
-                      <strong className="text-slate-300">Analyse :</strong> Le prix actuel est trop bas face à la forte demande.
-                    </p>
                   </div>
 
                   <div className="pt-2 border-t border-slate-800/60">
@@ -467,9 +531,6 @@ export default function App() {
                     <p className="text-[10px] text-slate-300">
                       <strong className="text-white">Diagnostic :</strong> Ventes conformes au prévisionnel. Équilibre atteint à {satCoveragePercentage}%. Revenu moyen : {satRepresentationRMS} €.
                     </p>
-                    <p className="text-[9px] text-slate-400">
-                      <strong className="text-slate-300">Analyse :</strong> La représentation se remplit sans aide extérieure.
-                    </p>
                   </div>
 
                   <div className="pt-2 border-t border-slate-800/60">
@@ -488,7 +549,7 @@ export default function App() {
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
                       <strong className="text-emerald-400 block mb-1">Catalogue de Saison :</strong>
-                      Vue d'ensemble de toute la programmation. Chaque spectacle se déplie pour afficher le détail de ses représentations et leur statut d'équilibre en temps réel.
+                      Vue d'ensemble de toute la programmation. Chaque spectacle se déplie pour afficher le détail de ses représentations.
                     </div>
                   </div>
                 </div>
@@ -512,7 +573,7 @@ export default function App() {
                         <div className="flex items-center gap-6 text-[10px]">
                           <div className="text-right">
                             <span className="text-slate-500 block">Remplissage global</span>
-                            <span className="text-white font-bold text-xs">{spec.fillingRate}</span>
+                            <span className="text-white font-bold text-xs">{spec.fillingRate}%</span>
                           </div>
                           <div className="text-right">
                             <span className="text-slate-500 block">Billets vendus</span>
@@ -562,7 +623,7 @@ export default function App() {
                   <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
                     <strong className="text-emerald-400 block mb-1">Mode Simulation ("Et Si ?") :</strong>
-                    Testez en temps réel l'impact financier de vos décisions (hausse de prix VIP, ouverture de quotas promo) avant de les appliquer concrètement sur votre billetterie.
+                    Testez en temps réel l'impact financier de vos décisions avant de les appliquer.
                   </div>
                 </div>
               </div>
