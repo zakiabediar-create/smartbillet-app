@@ -18,6 +18,10 @@ export default function App() {
   const baseCostPrice = 37.50; 
   const calculatedSRPrice = Math.round((baseCostPrice * (srPercentage / 100)) * 10) / 10;
 
+  // Calculs dynamiques pour les insights
+  const satRepresentationRMS = 35.0;
+  const satCoveragePercentage = Math.round((satRepresentationRMS / calculatedSRPrice) * 100);
+
   // Catalogue complet des spectacles
   const spectaclesList = [
     {
@@ -40,7 +44,7 @@ export default function App() {
       representations: [
         { id: 101, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places vendues' },
         { id: 102, date: 'Ven. 13 Sept. — 20h00', rmsNet: 32.0, seats: '310/500 places vendues' },
-        { id: 103, date: 'Sam. 14 Sept. — 20h30', rmsNet: 35.0, seats: '480/500 places vendues' },
+        { id: 103, date: 'Sam. 14 Sept. — 20h30', rmsNet: satRepresentationRMS, seats: '480/500 places vendues' },
         { id: 104, date: 'Dim. 15 Sept. — 15h00', rmsNet: 33.4, seats: '240/500 places vendues' }
       ]
     },
@@ -105,7 +109,6 @@ export default function App() {
       }
     : spectaclesList.find(s => s.id === Number(selectedSpectacleId)).kpis;
 
-  // Déclaration unique de isSREffectivelyReached
   const isSREffectivelyReached = currentData.coverage >= srPercentage;
 
   const toggleSpectacleAccordion = (id) => {
@@ -282,32 +285,125 @@ export default function App() {
               </div>
             </div>
 
-            {/* 4 cartes KPIs dynamiques */}
+            {/* 4 cartes KPIs dynamiques avec infobulles */}
             <div className="grid grid-cols-4 gap-4">
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Revenu Net Moyen / Billet</span>
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-slate-400 font-medium">Revenu Net Moyen / Billet</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Revenu Net Moyen :</strong> Moyenne nette réelle encaissée par billet après commissions.
+                    </div>
+                  </div>
+                </div>
                 <div className="text-xl font-bold text-white">{currentData.rmsNet} <span className="text-[10px] font-normal text-slate-500">/ cible {currentData.rmsTarget}</span></div>
                 <p className="text-[9px] text-emerald-400">{currentData.rmsComment}</p>
               </div>
 
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Point d'Équilibre (Rentabilité)</span>
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-slate-400 font-medium">Point d'Équilibre (Rentabilité)</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Point d'Équilibre :</strong> Indique si la billetterie couvre les coûts fixes.
+                    </div>
+                  </div>
+                </div>
                 <div className={`text-xl font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
                   {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({currentData.coverage}% / cible {srPercentage}%)
                 </div>
                 <p className="text-[9px] text-slate-500">Couverture globale des coûts fixes</p>
               </div>
 
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Coût d'Acquisition (CAC)</span>
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-slate-400 font-medium">Coût d'Acquisition (CAC)</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>CAC :</strong> Dépense marketing moyenne engagée pour vendre un billet.
+                    </div>
+                  </div>
+                </div>
                 <div className="text-xl font-bold text-amber-400">{currentData.cac}</div>
                 <p className="text-[9px] text-amber-500/80">{currentData.cacStatus}</p>
               </div>
 
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Taux d'Annulation Net</span>
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-slate-400 font-medium">Taux d'Annulation Net</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Taux d'Annulation :</strong> Pourcentage de billets remboursés.
+                    </div>
+                  </div>
+                </div>
                 <div className="text-xl font-bold text-white">{currentData.cancellation}</div>
                 <p className="text-[9px] text-emerald-400">Niveau optimal (&lt; 5%)</p>
+              </div>
+            </div>
+
+            {/* Bloc Insights & Recommandations IA */}
+            <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xs font-semibold text-white flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Recommandations Intelligentes & Alertes Séances
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase block w-max">
+                      ALERTE : RISQUE FINANCIER
+                    </span>
+                    <p className="text-[10px] text-slate-300">
+                      <strong className="text-white">Diagnostic :</strong> Retard de vente à J-5. Jauge : 26%.
+                    </p>
+                    <p className="text-[10px] text-rose-400 font-semibold">Manque à gagner estimé : -1 850 € Net</p>
+                  </div>
+                  <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between">
+                    <span className="text-[9px] text-amber-300 font-medium">👉 Action : 40 places à -{autoPromoDiscount}%</span>
+                    <button
+                      onClick={() => setAppliedYield(!appliedYield)}
+                      className={`px-2 py-1 rounded text-[9px] font-semibold transition ${appliedYield ? 'bg-emerald-600 text-white' : 'bg-emerald-500 text-slate-950'}`}
+                    >
+                      {appliedYield ? '✓ Appliqué' : 'Activer 1-clic'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase block w-max">
+                      OPPORTUNITÉ TARIFAIRE
+                    </span>
+                    <p className="text-[10px] text-slate-300">
+                      <strong className="text-white">Diagnostic :</strong> Forte demande à J-12. Carré Or rempli à {yieldThreshold}%.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-slate-800/60">
+                    <p className="text-[9px] text-emerald-400 font-medium">👉 Action : +{autoYieldPrice} € sur 10 dern. places Carré Or.</p>
+                  </div>
+                </div>
+
+                <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase block w-max">
+                      SÉANCE SÉCURISÉE
+                    </span>
+                    <p className="text-[10px] text-slate-300">
+                      <strong className="text-white">Diagnostic :</strong> Ventes conformes. Équilibre atteint à {satCoveragePercentage}%.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-slate-800/60">
+                    <p className="text-[9px] text-slate-300 font-medium">👉 Action : Stopper les réseaux tiers (0% comm.).</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -357,6 +453,28 @@ export default function App() {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Simulateur de Yield */}
+            <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
+              <h3 className="text-xs font-semibold text-white">Simulateur d'Impact Tarifaire ("Mode Et Si ?")</h3>
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <div className="col-span-2 space-y-3">
+                  <div>
+                    <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                      <span>Hausse tarifaire sur les places VIP (+{autoYieldPrice}%)</span>
+                      <span className="text-emerald-400">+{autoYieldPrice}%</span>
+                    </div>
+                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                      <div className="bg-emerald-400 h-full rounded-full" style={{ width: '60%' }}></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg text-center space-y-1">
+                  <span className="text-[9px] text-slate-500 uppercase tracking-wider block">Impact financier net estimé</span>
+                  <div className="text-lg font-bold text-emerald-400">+9 550 €</div>
+                </div>
               </div>
             </div>
           </>
