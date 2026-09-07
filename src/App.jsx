@@ -239,7 +239,7 @@ export default function App() {
         </header>
 
         {activeTab === 'Paramètres' ? (
-          /* ONGLET PARAMÈTRES AVEC GESTION GLOBALE ET SPÉCIFICITÉS ŒUVRE PAR ŒUVRE */
+          /* ONGLET PARAMÈTRES EXPLICATIF ET PÉDAGOGIQUE */
           <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-6 space-y-6">
             <div className="flex justify-between items-center border-b border-slate-800 pb-4">
               <div>
@@ -254,11 +254,19 @@ export default function App() {
               </button>
             </div>
 
-            {/* 1. Bloc Seuils Globaux */}
+            {/* 1. Bloc Seuils Globaux avec explications explicites */}
             <div className="space-y-3 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
-              <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-                1. Objectifs Financiers & Seuils d'Alerte Globaux (Saison)
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                  1. Objectifs Financiers & Seuils d'Alerte Globaux (Saison)
+                </h3>
+                <div className="group relative flex items-center cursor-pointer">
+                  <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                    Ces paramètres s'appliquent par défaut à l'ensemble de la programmation de la saison si aucun réglage spécifique n'est défini pour une œuvre.
+                  </div>
+                </div>
+              </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
@@ -271,6 +279,7 @@ export default function App() {
                     onChange={(e) => setTargetJ5(e.target.value)}
                     className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
                   />
+                  <span className="text-[9px] text-slate-500 block">Seuil d'alerte déclenché si la jauge est inférieure à cette valeur à 5 jours de la représentation.</span>
                 </div>
 
                 <div className="space-y-1">
@@ -283,45 +292,58 @@ export default function App() {
                     onChange={(e) => setSrPercentage(e.target.value)}
                     className="w-full bg-[#131927] border border-slate-700 rounded px-3 py-1.5 text-white text-xs"
                   />
+                  <span className="text-[9px] text-slate-500 block">Pourcentage global des coûts fixes à couvrir pour atteindre le seuil de rentabilité.</span>
                 </div>
               </div>
             </div>
 
-            {/* 2. Spécificités Économiques Œuvre par Œuvre */}
+            {/* 2. Spécificités Économiques Œuvre par Œuvre avec explications */}
             <div className="space-y-3 bg-[#0E131F] p-4 rounded-lg border border-slate-800/80">
-              <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-                2. Spécificités Économiques Œuvre par Œuvre (Modèle Granulaire)
-              </h3>
-              <p className="text-[10px] text-slate-400">Ajustez le coût de base et l'objectif d'équilibre spécifique à chaque production.</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
+                  2. Spécificités Économiques Œuvre par Œuvre (Modèle Granulaire)
+                </h3>
+                <div className="group relative flex items-center cursor-pointer">
+                  <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                    Permet d'ajuster le modèle économique de chaque spectacle selon ses coûts de production propres et ses objectifs de rentabilité spécifiques.
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400">Chaque production ayant des charges et des jauges différentes, définissez ici ses paramètres sur mesure :</p>
 
               <div className="space-y-3 pt-2">
                 {Object.keys(spectacleSettings).map((id) => {
                   const spec = spectacleSettings[id];
+                  const netTarget = Math.round((spec.baseCost * (spec.srTarget / 100)) * 10) / 10;
                   return (
-                    <div key={id} className="bg-[#131927] border border-slate-800 p-3 rounded-lg grid grid-cols-3 gap-4 items-center">
+                    <div key={id} className="bg-[#131927] border border-slate-800 p-3.5 rounded-lg grid grid-cols-3 gap-4 items-center">
                       <div>
-                        <span className="text-[9px] text-slate-500 uppercase block">Spectacle #{id}</span>
+                        <span className="text-[9px] text-slate-500 uppercase block font-medium">Production #{id}</span>
                         <h4 className="font-bold text-white text-xs">{spec.title}</h4>
+                        <span className="text-[9px] text-emerald-400 block mt-1">💡 Prix net cible calculé : ~{netTarget} € / billet</span>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] text-slate-400 block">Coût de revient unitaire (€) :</label>
+                        <label className="text-[10px] text-slate-300 block font-medium">Coût de revient unitaire (€) :</label>
                         <input
                           type="number"
                           value={spec.baseCost}
                           onChange={(e) => handleSpectacleSettingChange(id, 'baseCost', e.target.value)}
-                          className="w-full bg-[#0E131F] border border-slate-700 rounded px-2 py-1 text-white text-xs"
+                          className="w-full bg-[#0E131F] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
                         />
+                        <span className="text-[8px] text-slate-500 block">Charge fixe unitaire par place.</span>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] text-slate-400 block">Objectif Équilibre spécifique (%) :</label>
+                        <label className="text-[10px] text-slate-300 block font-medium">Objectif Équilibre spécifique (%) :</label>
                         <input
                           type="number"
                           value={spec.srTarget}
                           onChange={(e) => handleSpectacleSettingChange(id, 'srTarget', e.target.value)}
-                          className="w-full bg-[#0E131F] border border-slate-700 rounded px-2 py-1 text-white text-xs"
+                          className="w-full bg-[#0E131F] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
                         />
+                        <span className="text-[8px] text-slate-500 block">Taux de couverture requis pour ce spectacle.</span>
                       </div>
                     </div>
                   );
