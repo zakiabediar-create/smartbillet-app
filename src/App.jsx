@@ -13,9 +13,17 @@ export default function App() {
   const [autoYieldPrice, setAutoYieldPrice] = useState(5);
   const [autoPromoDiscount, setAutoPromoDiscount] = useState(20);
 
-  // Calcul dynamique du Seuil de Rentabilité en euros basé sur le % (ex: 80% de 37.50 € de base = 30 €)
+  // Calcul dynamique du Seuil de Rentabilité en euros basé sur le %
   const baseCostPrice = 37.50; 
   const calculatedSRPrice = Math.round((baseCostPrice * (srPercentage / 100)) * 10) / 10;
+
+  // Liste des représentations avec leur RMS Net pour calcul dynamique du statut
+  const representations = [
+    { id: 1, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places' },
+    { id: 2, date: 'Ven. 13 Sept. — 20h00', rmsNet: 32.0, seats: '310/500 places' },
+    { id: 3, date: 'Sam. 14 Sept. — 20h30', rmsNet: 35.0, seats: '480/500 places' },
+    { id: 4, date: 'Dim. 15 Sept. — 15h00', rmsNet: 33.4, seats: '240/500 places' }
+  ];
 
   // Stratégies modulaires
   const [customStrategies, setCustomStrategies] = useState([
@@ -386,7 +394,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Catalogue Événements & Représentations (dynamique avec SR) */}
+            {/* Catalogue Événements & Représentations (Dynamique basé sur calculatedSRPrice) */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-semibold text-white">Catalogue Événements & Représentations</h3>
@@ -422,45 +430,24 @@ export default function App() {
 
                 {isAccordionOpen && (
                   <div className="border-t border-slate-800/80 divide-y divide-slate-800/60 text-[10px]">
-                    <div className="p-3 flex justify-between items-center bg-[#131927]/40">
-                      <div>
-                        <span className="font-medium text-white block">Jeu. 12 Sept. — 19h00</span>
-                        <span className="text-slate-400">RMS Net: 21.5 € | SR: {calculatedSRPrice} € | Représentation: 130/500 places</span>
-                      </div>
-                      <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[9px]">
-                        Sous le seuil de rentabilité — Action requise
-                      </span>
-                    </div>
-
-                    <div className="p-3 flex justify-between items-center bg-[#131927]/20">
-                      <div>
-                        <span className="font-medium text-white block">Ven. 13 Sept. — 20h00</span>
-                        <span className="text-slate-400">RMS Net: 32 € | SR: {calculatedSRPrice} € | Représentation: 310/500 places</span>
-                      </div>
-                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px]">
-                        Seuil de rentabilité atteint — Action disponible
-                      </span>
-                    </div>
-
-                    <div className="p-3 flex justify-between items-center bg-[#131927]/20">
-                      <div>
-                        <span className="font-medium text-white block">Sam. 14 Sept. — 20h30</span>
-                        <span className="text-slate-400">RMS Net: 35 € | SR: {calculatedSRPrice} € | Représentation: 480/500 places</span>
-                      </div>
-                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px]">
-                        Seuil de rentabilité atteint — Action disponible
-                      </span>
-                    </div>
-
-                    <div className="p-3 flex justify-between items-center bg-[#131927]/20">
-                      <div>
-                        <span className="font-medium text-white block">Dim. 15 Sept. — 15h00</span>
-                        <span className="text-slate-400">RMS Net: 33.4 € | SR: {calculatedSRPrice} € | Représentation: 240/500 places</span>
-                      </div>
-                      <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[9px]">
-                        Sous le seuil de rentabilité — Action requise
-                      </span>
-                    </div>
+                    {representations.map((rep) => {
+                      const isReached = rep.rmsNet >= calculatedSRPrice;
+                      return (
+                        <div key={rep.id} className="p-3 flex justify-between items-center bg-[#131927]/40">
+                          <div>
+                            <span className="font-medium text-white block">{rep.date}</span>
+                            <span className="text-slate-400">RMS Net: {rep.rmsNet} € | SR: {calculatedSRPrice} € | Représentation: {rep.seats}</span>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded text-[9px] ${
+                            isReached 
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                          }`}>
+                            {isReached ? 'Seuil de rentabilité atteint — Action disponible' : 'Sous le seuil de rentabilité — Action requise'}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
