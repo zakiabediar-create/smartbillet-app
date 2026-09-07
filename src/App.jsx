@@ -18,13 +18,6 @@ export default function App() {
   const baseCostPrice = 37.50; 
   const calculatedSRPrice = Math.round((baseCostPrice * (srPercentage / 100)) * 10) / 10;
 
-  // Calculs dynamiques pour les insights
-  const satRepresentationRMS = 35.0;
-  const satCoveragePercentage = Math.round((satRepresentationRMS / calculatedSRPrice) * 100);
-
-  const effectiveCoverage = 82;
-  const isSREffectivelyReached = effectiveCoverage >= srPercentage;
-
   // Catalogue complet des spectacles
   const spectaclesList = [
     {
@@ -98,6 +91,7 @@ export default function App() {
     }
   ];
 
+  // Données KPIs dynamiques selon la sélection
   const currentData = selectedSpectacleId === 'all' 
     ? {
         title: 'Vue Globale (Toute la Saison)',
@@ -111,6 +105,7 @@ export default function App() {
       }
     : spectaclesList.find(s => s.id === Number(selectedSpectacleId)).kpis;
 
+  // Déclaration unique de isSREffectivelyReached
   const isSREffectivelyReached = currentData.coverage >= srPercentage;
 
   const toggleSpectacleAccordion = (id) => {
