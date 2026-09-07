@@ -17,6 +17,10 @@ export default function App() {
   const baseCostPrice = 37.50; 
   const calculatedSRPrice = Math.round((baseCostPrice * (srPercentage / 100)) * 10) / 10;
 
+  // Calcul de la couverture réelle atteinte globalement (simulée ici à 82% de couverture effective)
+  const effectiveCoverage = 82;
+  const isSREffectivelyReached = effectiveCoverage >= srPercentage;
+
   // Liste des représentations avec leur RMS Net pour calcul dynamique du statut
   const representations = [
     { id: 1, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places' },
@@ -283,9 +287,12 @@ export default function App() {
                 <p className="text-[9px] text-emerald-400">+4% au-dessus de la cible</p>
               </div>
 
+              {/* Carte Seuil de Rentabilité corrigée pour afficher l'état réel par rapport à la cible */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
                 <span className="text-[10px] text-slate-400 font-medium">Seuil Rentabilité (SR)</span>
-                <div className="text-xl font-bold text-emerald-400">Atteint ({srPercentage}%)</div>
+                <div className={`text-xl font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({effectiveCoverage}% / cible {srPercentage}%)
+                </div>
                 <p className="text-[9px] text-slate-500">Couverture des coûts fixes</p>
               </div>
 
@@ -394,7 +401,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Catalogue Événements & Représentations (Dynamique basé sur calculatedSRPrice) */}
+            {/* Catalogue Événements & Représentations */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-semibold text-white">Catalogue Événements & Représentations</h3>
