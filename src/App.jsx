@@ -317,7 +317,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD COMPLET */
+          /* TABLEAU DE BORD COMPLET AVEC INFOBULLES SUR TOUS LES BLOCS */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -416,7 +416,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bloc Insights & Recommandations IA */}
+            {/* Bloc Insights & Recommandations IA avec Infobulle ⓘ */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -425,7 +425,15 @@ export default function App() {
                     Recommandations Intelligentes & Alertes Séances (Insights IA)
                   </h3>
                 </div>
-                <span className="text-[10px] text-slate-500">Moteur actif en temps réel</span>
+                <div className="flex items-center gap-2">
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Insights IA :</strong> Analyse prédictive en temps réel de la dynamique de vente et propositions d'actions correctives.
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-slate-500">Moteur actif</span>
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -480,12 +488,17 @@ export default function App() {
               </div>
             </div>
 
-            {/* Catalogue Multi-Spectacles au format exact de la maquette */}
+            {/* Catalogue Multi-Spectacles avec Infobulle ⓘ */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center pb-1">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs font-semibold text-white">Catalogue des Représentations & Statut d'Équilibre</h3>
-                  <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold cursor-pointer">ⓘ</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Catalogue :</strong> Vue détaillée par spectacle et par représentation pour auditer la conformité des recettes nettes face aux objectifs.
+                    </div>
+                  </div>
                 </div>
                 <span className="text-[10px] text-slate-400 font-medium">3 spectacles actifs</span>
               </div>
