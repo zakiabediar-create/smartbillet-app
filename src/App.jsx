@@ -347,7 +347,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD COMPLET AVEC LANGAGE MÉTIER BILLETTERIE */
+          /* TABLEAU DE BORD COMPLET AVEC EXPLICATION RMT PÉDAGOGIQUE */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -375,7 +375,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* 4 cartes KPIs avec définitions métier en langage clair */}
+            {/* 4 cartes KPIs avec infobulle RMT pédagogique */}
             <div className="grid grid-cols-4 gap-4">
               {/* 1. Jauge */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
@@ -383,8 +383,9 @@ export default function App() {
                   <span className="text-[10px] text-slate-400 font-medium">1. Jauge (Taux de Remplissage)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Taux de Jauge :</strong> Pourcentage global de remplissage de la salle, calculé en divisant le cumul de tous les billets vendus par la capacité totale d'accueil de la saison.
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-72 bg-slate-900 text-slate-200 text-[10px] p-3 rounded shadow-xl border border-slate-700 z-20 pointer-events-none space-y-1">
+                      <strong className="text-white block">Taux de Jauge :</strong>
+                      Pourcentage global de remplissage de la salle (cumul des billets vendus divisé par la capacité totale).
                     </div>
                   </div>
                 </div>
@@ -392,14 +393,20 @@ export default function App() {
                 <p className="text-[9px] text-slate-400">Total vendus : {currentData.soldTicketsText}</p>
               </div>
 
-              {/* 2. Recette Nette / Place (RMT) */}
+              {/* 2. Recette Nette / Place (RMT) avec explication détaillée */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-400 font-medium">2. Recette Nette / Place (RMT)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Recette Moyenne par Billet (RMT Net) :</strong> Montant moyen réellement encaissé par place vendue sur l'ensemble de la saison après déduction des commissions des réseaux de vente.
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-80 bg-slate-900 text-slate-200 text-[10px] p-3 rounded shadow-xl border border-slate-700 z-20 pointer-events-none space-y-1.5">
+                      <strong className="text-white block">Qu'est-ce que le RMT Net ?</strong>
+                      Le RMT (Recette Moyenne par Ticket) représente l'argent net moyen réellement rentré dans la caisse pour chaque place vendue, une fois les commissions des réseaux déduites.
+                      <div className="pt-1 border-t border-slate-800">
+                        <strong className="text-white block">Vision Spectacle vs Vue Globale :</strong>
+                        • <strong>Par spectacle :</strong> La moyenne nette des places de ce spectacle précis.<br/>
+                        • <strong>Vue Globale :</strong> La moyenne pondérée de la saison. Un spectacle qui vend 4 550 places pèse beaucoup plus lourd dans le calcul global qu'un spectacle qui en vend 1 260.
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -416,8 +423,9 @@ export default function App() {
                   <span className="text-[10px] text-slate-400 font-medium">3. Point d'Équilibre (Rentabilité)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Point d'Équilibre :</strong> Indique si le volume des recettes de la saison permet d'atteindre ou de dépasser le seuil de couverture des charges fixes défini.
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-72 bg-slate-900 text-slate-200 text-[10px] p-3 rounded shadow-xl border border-slate-700 z-20 pointer-events-none space-y-1">
+                      <strong className="text-white block">Point d'Équilibre de la Saison :</strong>
+                      Mesure la couverture globale des charges fixes par rapport au volume des ventes réelles.
                     </div>
                   </div>
                 </div>
@@ -433,8 +441,9 @@ export default function App() {
                   <span className="text-[10px] text-slate-400 font-medium">4. Canaux de Vente (Cumul Saison)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Canaux de Vente :</strong> Répartition en volume et en pourcentage des billets écoulés sur la saison selon chaque canal de distribution (guichet direct et réseaux partenaires).
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-72 bg-slate-900 text-slate-200 text-[10px] p-3 rounded shadow-xl border border-slate-700 z-20 pointer-events-none space-y-1">
+                      <strong className="text-white block">Canaux de Vente :</strong>
+                      Répartition en volume et en pourcentage des billets écoulés sur la saison selon chaque canal de distribution.
                     </div>
                   </div>
                 </div>
