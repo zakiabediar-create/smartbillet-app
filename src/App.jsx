@@ -17,7 +17,7 @@ export default function App() {
   const [notifRentability, setNotifRentability] = useState(true);
   const [notifWeekly, setNotifWeekly] = useState(true);
 
-  // Modèles économiques œuvre par œuvre (Coût de revient et Objectif d'équilibre %)
+  // Modèles économiques œuvre par œuvre
   const [spectacleSettings, setSpectacleSettings] = useState({
     1: { title: 'Le Misanthrope', baseCost: 38.0, srTarget: 85, sold: 1260, totalCap: 5000, rmsNetNum: 26.8 },
     2: { title: 'Le Dîner de Cons', baseCost: 32.0, srTarget: 75, sold: 3100, totalCap: 4550, rmsNetNum: 34.5 },
@@ -98,16 +98,14 @@ export default function App() {
     }
   ];
 
-  // Calculs globaux de la saison (sommes et moyennes pondérées)
+  // Calculs globaux de la saison
   const totalSoldTickets = Object.values(spectacleSettings).reduce((acc, s) => acc + s.sold, 0);
   const totalCapacity = Object.values(spectacleSettings).reduce((acc, s) => acc + s.totalCap, 0);
   const globalFillingRate = Math.round((totalSoldTickets / totalCapacity) * 100) + '%';
 
-  // RMT Globale pondérée = Somme(Billets * RMT) / Total Billets
   const weightedRmtSum = Object.values(spectacleSettings).reduce((acc, s) => acc + (s.sold * s.rmsNetNum), 0);
   const globalWeightedRmt = (weightedRmtSum / totalSoldTickets).toFixed(2);
 
-  // Couverture globale moyenne pondérée par les objectifs spécifiques
   const weightedCoverageSum = Object.values(spectacleSettings).reduce((acc, s) => {
     let specCoverage = s.sold === 1260 ? 72 : s.sold === 3100 ? 88 : 114;
     return acc + (s.sold * specCoverage);
@@ -116,12 +114,10 @@ export default function App() {
   const globalTargetSr = Math.round(Object.values(spectacleSettings).reduce((acc, s) => acc + s.srTarget, 0) / 3);
   const isGlobalSrReached = globalCoverage >= globalTargetSr;
 
-  // Somme des canaux par volume de places vendues sur la saison
   const totalGuichet = 567 + 1860 + 3640;
   const totalBilletReduc = 441 + 775 + 455;
   const totalFnac = 252 + 465 + 455;
 
-  // Données KPIs dynamiques selon la sélection
   const currentData = selectedSpectacleId === 'all' 
     ? {
         title: 'Vue Globale (Toute la Saison)',
@@ -351,7 +347,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD COMPLET AVEC CALCULS ET RÈGLES DYNAMIQUES */
+          /* TABLEAU DE BORD COMPLET AVEC LANGAGE MÉTIER BILLETTERIE */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -379,7 +375,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* 4 cartes KPIs avec règles de calcul dynamiques explicitées dans les infobulles ⓘ */}
+            {/* 4 cartes KPIs avec définitions métier en langage clair */}
             <div className="grid grid-cols-4 gap-4">
               {/* 1. Jauge */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
@@ -388,7 +384,7 @@ export default function App() {
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Règle de calcul (Vue Globale) :</strong> Somme totale des billets vendus sur tous les spectacles divisée par la capacité totale cumulée de la saison.
+                      <strong>Taux de Jauge :</strong> Pourcentage global de remplissage de la salle, calculé en divisant le cumul de tous les billets vendus par la capacité totale d'accueil de la saison.
                     </div>
                   </div>
                 </div>
@@ -396,14 +392,14 @@ export default function App() {
                 <p className="text-[9px] text-slate-400">Total vendus : {currentData.soldTicketsText}</p>
               </div>
 
-              {/* 2. Recette Nette par place (RMT) avec règle de calcul */}
+              {/* 2. Recette Nette / Place (RMT) */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-400 font-medium">2. Recette Nette / Place (RMT)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Règle de calcul (Vue Globale) :</strong> Moyenne pondérée par le volume de billets vendus de la RMT nette de chaque spectacle de la saison.
+                      <strong>Recette Moyenne par Billet (RMT Net) :</strong> Montant moyen réellement encaissé par place vendue sur l'ensemble de la saison après déduction des commissions des réseaux de vente.
                     </div>
                   </div>
                 </div>
@@ -414,14 +410,14 @@ export default function App() {
                 <p className="text-[9px] text-emerald-400">Revenu réel après commissions</p>
               </div>
 
-              {/* 3. Point d'Équilibre (Rentabilité) avec règle de calcul */}
+              {/* 3. Point d'Équilibre (Rentabilité) */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-400 font-medium">3. Point d'Équilibre (Rentabilité)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Règle de calcul (Vue Globale) :</strong> Ratio global entre le volume des ventes réelles et l'objectif de couverture des charges cumulées de la saison.
+                      <strong>Point d'Équilibre :</strong> Indique si le volume des recettes de la saison permet d'atteindre ou de dépasser le seuil de couverture des charges fixes défini.
                     </div>
                   </div>
                 </div>
@@ -438,7 +434,7 @@ export default function App() {
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Règle de calcul (Vue Globale) :</strong> Somme totale des billets vendus par canal sur l'ensemble des spectacles de la saison.
+                      <strong>Canaux de Vente :</strong> Répartition en volume et en pourcentage des billets écoulés sur la saison selon chaque canal de distribution (guichet direct et réseaux partenaires).
                     </div>
                   </div>
                 </div>
