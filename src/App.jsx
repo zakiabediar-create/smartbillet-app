@@ -17,11 +17,23 @@ export default function App() {
   const [notifRentability, setNotifRentability] = useState(true);
   const [notifWeekly, setNotifWeekly] = useState(true);
 
-  // Modèles économiques œuvre par œuvre
+  // Modèles économiques par grille de catégories (Option 2)
   const [spectacleSettings, setSpectacleSettings] = useState({
-    1: { title: 'Le Misanthrope', baseCost: 38.0, srTarget: 85, sold: 1260, totalCap: 5000, rmsNetNum: 26.8 },
-    2: { title: 'Le Dîner de Cons', baseCost: 32.0, srTarget: 75, sold: 3100, totalCap: 4550, rmsNetNum: 34.5 },
-    3: { title: 'Fary — Aime', baseCost: 30.0, srTarget: 70, sold: 4550, totalCap: 5000, rmsNetNum: 41.2 }
+    1: { 
+      title: 'Le Misanthrope', 
+      catOr: 55, cat1: 38, cat2: 22, // Prix publics par catégorie
+      srTarget: 85, sold: 1260, totalCap: 5000, rmsNetNum: 26.8 
+    },
+    2: { 
+      title: 'Le Dîner de Cons', 
+      catOr: 50, cat1: 35, cat2: 20, 
+      srTarget: 75, sold: 3100, totalCap: 4550, rmsNetNum: 34.5 
+    },
+    3: { 
+      title: 'Fary — Aime', 
+      catOr: 60, cat1: 42, cat2: 25, 
+      srTarget: 70, sold: 4550, totalCap: 5000, rmsNetNum: 41.2 
+    }
   });
 
   const handleSpectacleSettingChange = (id, field, value) => {
@@ -112,7 +124,6 @@ export default function App() {
   }, 0);
   const globalCoverage = Math.round(weightedCoverageSum / totalSoldTickets);
   const globalTargetSr = Math.round(Object.values(spectacleSettings).reduce((acc, s) => acc + s.srTarget, 0) / 3);
-  const isGlobalSrReached = globalCoverage >= globalTargetSr;
 
   const totalGuichet = 567 + 1860 + 3640;
   const totalBilletReduc = 441 + 775 + 455;
@@ -222,11 +233,11 @@ export default function App() {
         </header>
 
         {activeTab === 'Paramètres' ? (
-          /* ONGLET PARAMÈTRES */
+          /* ONGLET PARAMÈTRES AVEC GRILLES TARIFAIRES PAR CATÉGORIE */
           <div className="space-y-6 max-w-3xl">
             <div>
               <h2 className="text-sm font-semibold text-white">Paramètres de la Billetterie</h2>
-              <p className="text-[10px] text-slate-400">Configurez votre établissement et les modèles économiques de vos spectacles.</p>
+              <p className="text-[10px] text-slate-400">Configurez votre établissement et les grilles tarifaires de vos spectacles.</p>
             </div>
 
             {/* Carte Établissement */}
@@ -273,38 +284,59 @@ export default function App() {
               </div>
             </div>
 
-            {/* Carte Modèles Économiques */}
+            {/* Carte Grilles Tarifaires par Catégorie */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-5 space-y-4">
               <div>
-                <h3 className="text-xs font-semibold text-white">Modèles Économiques par Spectacle</h3>
-                <p className="text-[10px] text-slate-400">Ajustez le coût de revient unitaire et le taux de couverture requis pour chaque production.</p>
+                <h3 className="text-xs font-semibold text-white">Grilles Tarifaires par Catégorie et Spectacle</h3>
+                <p className="text-[10px] text-slate-400">Définissez les prix publics par catégorie (Carré Or, 1ère et 2ème cat.) pour chaque production.</p>
               </div>
 
-              <div className="space-y-3 pt-1">
+              <div className="space-y-4 pt-1">
                 {Object.keys(spectacleSettings).map((id) => {
                   const spec = spectacleSettings[id];
-                  const netTarget = Math.round((spec.baseCost * (spec.srTarget / 100)) * 10) / 10;
+                  // Calcul d'un prix moyen indicatif basé sur la grille
+                  const avgPrice = Math.round((spec.catOr * 0.2 + spec.cat1 * 0.5 + spec.cat2 * 0.3));
 
                   return (
-                    <div key={id} className="bg-[#0E131F] border border-slate-800 p-3.5 rounded-lg space-y-2">
+                    <div key={id} className="bg-[#0E131F] border border-slate-800 p-4 rounded-lg space-y-3">
                       <div className="flex justify-between items-center">
                         <h4 className="font-bold text-white text-xs">{spec.title}</h4>
-                        <span className="text-[9px] text-emerald-400 font-medium">Prix net cible : ~{netTarget} €</span>
+                        <span className="text-[10px] text-emerald-400 font-medium">Panier moyen indicatif : ~{avgPrice} €</span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-4 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[10px] text-slate-400 block">Coût de revient unitaire (€) :</label>
+                          <label className="text-[9px] text-slate-400 block">Carré Or (€) :</label>
                           <input
                             type="number"
-                            value={spec.baseCost}
-                            onChange={(e) => handleSpectacleSettingChange(id, 'baseCost', e.target.value)}
+                            value={spec.catOr}
+                            onChange={(e) => handleSpectacleSettingChange(id, 'catOr', e.target.value)}
                             className="w-full bg-[#131927] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] text-slate-400 block">Objectif d'Équilibre spécifique (%) :</label>
+                          <label className="text-[9px] text-slate-400 block">1ère Catégorie (€) :</label>
+                          <input
+                            type="number"
+                            value={spec.cat1}
+                            onChange={(e) => handleSpectacleSettingChange(id, 'cat1', e.target.value)}
+                            className="w-full bg-[#131927] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-slate-400 block">2ème Catégorie (€) :</label>
+                          <input
+                            type="number"
+                            value={spec.cat2}
+                            onChange={(e) => handleSpectacleSettingChange(id, 'cat2', e.target.value)}
+                            className="w-full bg-[#131927] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-slate-400 block">Objectif Remplissage (%) :</label>
                           <input
                             type="number"
                             value={spec.srTarget}
@@ -347,7 +379,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD COMPLET AVEC INFOBULLES SIMPLES ET DIRECTES */
+          /* TABLEAU DE BORD COMPLET */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -375,7 +407,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* 4 cartes KPIs avec infobulles simples */}
+            {/* 4 cartes KPIs */}
             <div className="grid grid-cols-4 gap-4">
               {/* 1. Jauge */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
@@ -392,7 +424,7 @@ export default function App() {
                 <p className="text-[9px] text-slate-400">Total vendus : {currentData.soldTicketsText}</p>
               </div>
 
-              {/* 2. Recette Nette / Place (RMT) avec wording simple */}
+              {/* 2. Recette Nette / Place (RMT) */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-400 font-medium">2. Recette Nette / Place (RMT)</span>
@@ -410,7 +442,7 @@ export default function App() {
                 <p className="text-[9px] text-emerald-400">Revenu réel après commissions</p>
               </div>
 
-              {/* 3. Point d'Équilibre (Rentabilité) avec wording simple */}
+              {/* 3. Point d'Équilibre (Rentabilité) */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-400 font-medium">3. Point d'Équilibre (Rentabilité)</span>
