@@ -11,7 +11,7 @@ export default function App() {
   // Paramètres globaux de billetterie
   const [venueType, setVenueType] = useState('Théâtre');
   const [defaultProfile, setDefaultProfile] = useState('Responsable Billetterie');
-  const [targetRmt, setTargetRmt] = useState(34);
+  const [targetRmt, setTargetRmt] = useState(30);
 
   // Toggles de notifications
   const [notifRentability, setNotifRentability] = useState(true);
@@ -39,9 +39,8 @@ export default function App() {
       title: 'Le Misanthrope',
       dates: '12 sept. — 04 oct. 2026',
       fillingRate: '26%',
-      soldTickets: 1260,
-      totalCapacity: 5000,
-      remainingTickets: 3540,
+      soldTickets: '1 260',
+      remainingTickets: '3 540',
       networks: { guichet: '45%', billetterieReduc: '35%', fnacReseau: '20%' },
       kpis: {
         rmsNet: '26.80 €',
@@ -49,10 +48,10 @@ export default function App() {
         status: 'Attention : Jauge lente'
       },
       representations: [
-        { id: 101, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places vendues' },
-        { id: 102, date: 'Ven. 13 Sept. — 20h00', rmsNet: 32.0, seats: '310/500 places vendues' },
-        { id: 103, date: 'Sam. 14 Sept. — 20h30', rmsNet: 35.0, seats: '480/500 places vendues' },
-        { id: 104, date: 'Dim. 15 Sept. — 15h00', rmsNet: 33.4, seats: '240/500 places vendues' }
+        { id: 101, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places vendues', alert: true },
+        { id: 102, date: 'Ven. 13 Sept. — 20h00', rmsNet: 32.0, seats: '310/500 places vendues', alert: false },
+        { id: 103, date: 'Sam. 14 Sept. — 20h30', rmsNet: 35.0, seats: '480/500 places vendues', alert: false },
+        { id: 104, date: 'Dim. 15 Sept. — 15h00', rmsNet: 33.4, seats: '240/500 places vendues', alert: false }
       ]
     },
     {
@@ -61,9 +60,8 @@ export default function App() {
       title: 'Le Dîner de Cons',
       dates: '08 oct. — 30 oct. 2026',
       fillingRate: '68%',
-      soldTickets: 3100,
-      totalCapacity: 4550,
-      remainingTickets: 1450,
+      soldTickets: '3 100',
+      remainingTickets: '1 450',
       networks: { guichet: '60%', billetterieReduc: '25%', fnacReseau: '15%' },
       kpis: {
         rmsNet: '34.50 €',
@@ -71,9 +69,9 @@ export default function App() {
         status: 'Dynamique excellente'
       },
       representations: [
-        { id: 201, date: 'Mer. 08 Oct. — 20h30', rmsNet: 34.0, seats: '420/500 places vendues' },
-        { id: 202, date: 'Jeu. 09 Oct. — 20h30', rmsNet: 38.5, seats: '480/500 places vendues' },
-        { id: 203, date: 'Ven. 10 Oct. — 21h00', rmsNet: 40.0, seats: '500/500 places vendues (Complet)' }
+        { id: 201, date: 'Mer. 08 Oct. — 20h30', rmsNet: 34.0, seats: '420/500 places vendues', alert: false },
+        { id: 202, date: 'Jeu. 09 Oct. — 20h30', rmsNet: 38.5, seats: '480/500 places vendues', alert: false },
+        { id: 203, date: 'Ven. 10 Oct. — 21h00', rmsNet: 40.0, seats: '500/500 places vendues (Complet)', alert: false }
       ]
     },
     {
@@ -82,9 +80,8 @@ export default function App() {
       title: 'Fary — Aime',
       dates: '05 nov. — 20 nov. 2026',
       fillingRate: '91%',
-      soldTickets: 4550,
-      totalCapacity: 5000,
-      remainingTickets: 450,
+      soldTickets: '4 550',
+      remainingTickets: '450',
       networks: { guichet: '80%', billetterieReduc: '10%', fnacReseau: '10%' },
       kpis: {
         rmsNet: '41.20 €',
@@ -92,8 +89,8 @@ export default function App() {
         status: 'Quasi-complet'
       },
       representations: [
-        { id: 301, date: 'Jeu. 05 Nov. — 20h00', rmsNet: 42.0, seats: '490/500 places vendues' },
-        { id: 302, date: 'Ven. 06 Nov. — 20h00', rmsNet: 44.5, seats: '500/500 places vendues (Complet)' }
+        { id: 301, date: 'Jeu. 05 Nov. — 20h00', rmsNet: 42.0, seats: '490/500 places vendues', alert: false },
+        { id: 302, date: 'Ven. 06 Nov. — 20h00', rmsNet: 44.5, seats: '500/500 places vendues (Complet)', alert: false }
       ]
     }
   ];
@@ -111,7 +108,7 @@ export default function App() {
       }
     : {
         ...spectaclesList.find(s => s.id === Number(selectedSpectacleId)),
-        soldTickets: `${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).soldTickets} / ${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).totalCapacity} pl.`
+        soldTickets: `${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).soldTickets} / ${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).remainingTickets} pl.`
       };
 
   const activeSrPercentage = selectedSpectacleId === 'all' 
@@ -320,7 +317,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD COMPLET (4 Piliers + Infobulles + Insights IA + Simulateur + Catalogue) */
+          /* TABLEAU DE BORD COMPLET */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -383,21 +380,21 @@ export default function App() {
                 <p className="text-[9px] text-emerald-400">Revenu réel après commissions</p>
               </div>
 
-              {/* 3. Seuil de rentabilité / Point mort */}
+              {/* 3. Point d'Équilibre (Rentabilité) */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-slate-400 font-medium">3. Point Mort (Rentabilité)</span>
+                  <span className="text-[10px] text-slate-400 font-medium">3. Point d'Équilibre (Rentabilité)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Point Mort :</strong> Indique si la billetterie couvre les charges fixes de la production selon l'objectif configuré.
+                      <strong>Point d'Équilibre :</strong> Indique si la billetterie couvre les charges fixes de la production selon l'objectif configuré.
                     </div>
                   </div>
                 </div>
                 <div className={`text-xl font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
-                  {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({currentData.coverage}% / {activeSrPercentage}%)
+                  {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({currentData.coverage}% / cible {activeSrPercentage}%)
                 </div>
-                <p className="text-[9px] text-slate-500">Couverture des charges fixes</p>
+                <p className="text-[9px] text-slate-500">Couverture des coûts fixes</p>
               </div>
 
               {/* 4. Réseaux de vente */}
@@ -473,7 +470,7 @@ export default function App() {
                       SÉANCE SÉCURISÉE
                     </span>
                     <p className="text-[10px] text-slate-300">
-                      <strong className="text-white">Diagnostic :</strong> Fary — Aime a atteint son point mort à 114%.
+                      <strong className="text-white">Diagnostic :</strong> Fary — Aime a atteint son point d'équilibre à 114%.
                     </p>
                   </div>
                   <div className="pt-2 border-t border-slate-800/60">
@@ -483,9 +480,16 @@ export default function App() {
               </div>
             </div>
 
-            {/* Catalogue Multi-Spectacles */}
+            {/* Catalogue Multi-Spectacles au format exact de la maquette */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
-              <h3 className="text-xs font-semibold text-white">Catalogue des Représentations & Statut d'Équilibre</h3>
+              <div className="flex justify-between items-center pb-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-semibold text-white">Catalogue des Représentations & Statut d'Équilibre</h3>
+                  <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold cursor-pointer">ⓘ</span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-medium">3 spectacles actifs</span>
+              </div>
+
               <div className="space-y-3">
                 {spectaclesList.map((spec) => {
                   const isOpen = openSpectacles[spec.id];
@@ -494,29 +498,48 @@ export default function App() {
                     <div key={spec.id} className="border border-slate-800/80 rounded-lg overflow-hidden bg-[#0E131F]">
                       <button
                         onClick={() => toggleSpectacleAccordion(spec.id)}
-                        className="w-full p-3 flex justify-between items-center hover:bg-slate-800/40 transition text-left cursor-pointer"
+                        className="w-full p-3.5 flex justify-between items-center hover:bg-slate-800/40 transition text-left cursor-pointer"
                       >
                         <div>
-                          <span className="text-[9px] text-slate-500 uppercase tracking-wider block">{spec.category} — Objectif équilibre : {specTarget}%</span>
-                          <h4 className="font-semibold text-white text-sm">{spec.title}</h4>
-                          <p className="text-[10px] text-slate-500">{spec.dates}</p>
+                          <span className="text-[9px] text-slate-400 uppercase tracking-wider block font-semibold">
+                            {spec.category} (CIBLE ÉQUILIBRE : {specTarget}%)
+                          </span>
+                          <h4 className="font-bold text-white text-sm">{spec.title}</h4>
+                          <p className="text-[10px] text-slate-400">{spec.dates}</p>
                         </div>
-                        <div className="flex items-center gap-6 text-[10px]">
-                          <span className="text-white font-bold text-xs">{spec.fillingRate} rempli</span>
-                          <span className="text-slate-500 text-xs">{isOpen ? '▲' : '▼'}</span>
+                        <div className="flex items-center gap-8 text-[11px]">
+                          <div className="text-right">
+                            <span className="text-[9px] text-slate-400 block uppercase">Remplissage global</span>
+                            <span className="text-white font-bold">{spec.fillingRate}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[9px] text-slate-400 block uppercase">Billets vendus</span>
+                            <span className="text-white font-bold">{spec.soldTickets}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[9px] text-slate-400 block uppercase">Places restantes</span>
+                            <span className="text-amber-400 font-bold">{spec.remainingTickets}</span>
+                          </div>
+                          <span className="text-slate-400 text-xs pl-2">{isOpen ? '▲' : '▼'}</span>
                         </div>
                       </button>
 
                       {isOpen && (
                         <div className="border-t border-slate-800/80 divide-y divide-slate-800/60 text-[10px]">
                           {spec.representations.map((rep) => (
-                            <div key={rep.id} className="p-3 flex justify-between items-center bg-[#131927]/40">
+                            <div key={rep.id} className="p-3.5 flex justify-between items-center bg-[#131927]/40">
                               <div>
-                                <span className="font-medium text-white block">{rep.date}</span>
-                                <span className="text-slate-400">Recette nette : <strong>{rep.rmsNet} €</strong> | Objectif RMT : <strong>{targetRmt} €</strong></span>
+                                <span className="font-semibold text-white block text-[11px] mb-0.5">{rep.date}</span>
+                                <span className="text-slate-300">
+                                  Revenu net moyen : <strong>{rep.rmsNet} €</strong> | Objectif équilibre requis : <strong>{targetRmt} €</strong> | Jauge : <strong>{rep.seats}</strong>
+                                </span>
                               </div>
-                              <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                ✓ Séance conforme
+                              <span className={`px-2.5 py-1 rounded text-[9px] font-bold ${
+                                rep.alert 
+                                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30' 
+                                  : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                              }`}>
+                                {rep.alert ? '⚠ Action requise — Sous l\'objectif d\'équilibre' : '✓ Séance équilibrée — Objectif atteint'}
                               </span>
                             </div>
                           ))}
