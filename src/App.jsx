@@ -6,6 +6,7 @@ export default function App() {
   const [selectedSpectacleId, setSelectedSpectacleId] = useState('all');
   const [openSpectacles, setOpenSpectacles] = useState({ 1: true, 2: false, 3: false });
   const [autoYieldPrice, setAutoYieldPrice] = useState(5);
+  const [appliedYield, setAppliedYield] = useState(false);
 
   // Paramètres globaux de billetterie
   const [venueType, setVenueType] = useState('Théâtre');
@@ -319,7 +320,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD AVEC 4 PILIERS + SIMULATEUR DE YIELD ET TOOLTIPS ⓘ */
+          /* TABLEAU DE BORD COMPLET (4 Piliers + Infobulles + Insights IA + Simulateur + Catalogue) */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -418,6 +419,70 @@ export default function App() {
               </div>
             </div>
 
+            {/* Bloc Insights & Recommandations IA */}
+            <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-semibold text-white flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Recommandations Intelligentes & Alertes Séances (Insights IA)
+                  </h3>
+                </div>
+                <span className="text-[10px] text-slate-500">Moteur actif en temps réel</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase block w-max">
+                      ALERTE : JAUGE LENTE
+                    </span>
+                    <p className="text-[10px] text-slate-300">
+                      <strong className="text-white">Diagnostic :</strong> Retard de vente constaté sur Le Misanthrope à J-5.
+                    </p>
+                    <p className="text-[10px] text-rose-400 font-semibold">Manque à gagner estimé : -1 850 €</p>
+                  </div>
+                  <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between">
+                    <span className="text-[9px] text-amber-300 font-medium">👉 Action : Relais BilletReduc</span>
+                    <button
+                      onClick={() => setAppliedYield(!appliedYield)}
+                      className={`px-2 py-1 rounded text-[9px] font-semibold transition ${appliedYield ? 'bg-emerald-600 text-white' : 'bg-emerald-500 text-slate-950'}`}
+                    >
+                      {appliedYield ? '✓ Appliqué' : 'Activer 1-clic'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase block w-max">
+                      OPPORTUNITÉ TARIFAIRE
+                    </span>
+                    <p className="text-[10px] text-slate-300">
+                      <strong className="text-white">Diagnostic :</strong> Forte demande sur Le Dîner de Cons. Carré Or saturé à 90%.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-slate-800/60">
+                    <p className="text-[9px] text-emerald-400 font-medium">👉 Action : Activer le yield sur les 10 dernières places.</p>
+                  </div>
+                </div>
+
+                <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase block w-max">
+                      SÉANCE SÉCURISÉE
+                    </span>
+                    <p className="text-[10px] text-slate-300">
+                      <strong className="text-white">Diagnostic :</strong> Fary — Aime a atteint son point mort à 114%.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-slate-800/60">
+                    <p className="text-[9px] text-slate-300 font-medium">👉 Action : Fermer les réseaux tiers (0% comm.).</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Catalogue Multi-Spectacles */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <h3 className="text-xs font-semibold text-white">Catalogue des Représentations & Statut d'Équilibre</h3>
@@ -463,7 +528,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Simulateur de Yield ("Mode Et Si ?") avec infobulle explicative */}
+            {/* Simulateur de Yield ("Mode Et Si ?") */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-semibold text-white">Simulateur d'Impact Tarifaire ("Mode Et Si ?")</h3>
