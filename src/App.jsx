@@ -183,29 +183,28 @@ export default function App() {
     }
   };
 
-  const currentData = selectedSpectacleId === 'all' 
+  const currentSpectacleData = selectedSpectacleId === 'all' 
     ? null
     : (() => {
         const spec = spectacleSettings[selectedSpectacleId];
         const specListObj = spectaclesList.find(s => s.id === Number(selectedSpectacleId));
+        const specTargetRmt = calculateTargetRmt(spec);
+        const specCoverage = spec.sold === 1260 ? 72 : spec.sold === 3100 ? 88 : 114;
         return {
           ...specListObj,
           fillingRate: specListObj.fillingRate,
           soldTicketsText: `${specListObj.soldCount} / ${spec.totalCap} pl.`,
           rmsNet: spec.rmsNetNum.toFixed(2) + ' €',
-          coverage: spec.sold === 1260 ? 72 : spec.sold === 3100 ? 88 : 114,
-          targetRmtVal: calculateTargetRmt(spec),
+          coverage: specCoverage,
+          targetRmtVal: specTargetRmt,
           targetSr: spec.srTarget,
+          budget: spec.totalBudget,
           networks: specListObj.networks
         };
       })();
 
-  const activeSrPercentage = selectedSpectacleId === 'all' 
-    ? globalData.targetSr 
-    : spectacleSettings[selectedSpectacleId].srTarget;
-
-  const activeCoverage = selectedSpectacleId === 'all' ? globalData.coverage : currentData.coverage;
-  const isSREffectivelyReached = activeCoverage >= activeSrPercentage;
+  const globalIsReached = globalData.coverage >= globalData.targetSr;
+  const specIsReached = currentSpectacleData ? currentSpectacleData.coverage >= currentSpectacleData.targetSr : false;
 
   const toggleSpectacleAccordion = (id) => {
     setOpenSpectacles(prev => ({ ...prev, [id]: !prev[id] }));
@@ -471,7 +470,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD COMPLET */
+          /* TABLEAU DE BORD COMPLET AVEC LES DEUX BLOCS VISUELS */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -499,7 +498,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* BLOC DISTINCT : VUE GLOBALE DE LA SAISON (affiché en permanence en haut) */}
+            {/* BLOC 1 : SYNTHÈSE GLOBALE DE LA SAISON (Toujours visible) */}
             <div className="bg-gradient-to-r from-[#131927] to-[#1a2338] border border-emerald-500/30 rounded-xl p-5 space-y-3 shadow-lg">
               <div className="flex justify-between items-center border-b border-slate-800 pb-2">
                 <div className="flex items-center gap-2">
@@ -529,8 +528,8 @@ export default function App() {
 
                 <div className="bg-[#0E131F]/80 border border-slate-800 p-3.5 rounded-lg space-y-1">
                   <span className="text-[9px] text-slate-400 block uppercase font-medium">3. Point d'Équilibre Global</span>
-                  <div className={`text-lg font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
-                    {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({globalData.coverage}% / cible {globalData.targetSr}%)
+                  <div className={`text-lg font-bold ${globalIsReached ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {globalIsReached ? 'Atteint' : 'En cours'} ({globalData.coverage}% / cible {globalData.targetSr}%)
                   </div>
                   <p className="text-[9px] text-slate-400">Couverture budgétaire de saison</p>
                 </div>
@@ -545,37 +544,49 @@ export default function App() {
               </div>
             </div>
 
-            {/* 4 cartes KPIs de la sélection active (si un spectacle est sélectionné) */}
-            {selectedSpectacleId !== 'all' && currentData && (
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-3">
-                <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wide">
-                  Indicateurs spécifiques : {currentData.title}
-                </h4>
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg space-y-1">
-                    <span className="text-[9px] text-slate-400 block uppercase">Jauge spectacle</span>
-                    <div className="text-base font-bold text-white">{currentData.fillingRate}</div>
-                    <p className="text-[9px] text-slate-400">{currentData.soldTicketsText}</p>
+            {/* BLOC 2 : SYNTHÈSE DU SPECTACLE SÉLECTIONNÉ (S'affiche si un spectacle spécifique est sélectionné) */}
+            {selectedSpectacleId !== 'all' && currentSpectacleData && (
+              <div className="bg-gradient-to-r from-[#131927] to-[#1a2338] border border-cyan-500/30 rounded-xl p-5 space-y-3 shadow-lg">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">Vue par Spectacle : {currentSpectacleData.title}</h3>
+                  </div>
+                  <span className="text-[10px] text-cyan-400 font-semibold bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">
+                    Budget charges : {currentSpectacleData.budget.toLocaleString()} €
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-4 gap-4 pt-1">
+                  <div className="bg-[#0E131F]/80 border border-slate-800 p-3.5 rounded-lg space-y-1">
+                    <span className="text-[9px] text-slate-400 block uppercase font-medium">1. Jauge du Spectacle</span>
+                    <div className="text-lg font-bold text-white">{currentSpectacleData.fillingRate}</div>
+                    <p className="text-[9px] text-slate-400">Vendus : {currentSpectacleData.soldTicketsText}</p>
                   </div>
 
-                  <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg space-y-1">
-                    <span className="text-[9px] text-slate-400 block uppercase">RMT Net Spectacle</span>
-                    <div className="text-base font-bold text-white">
-                      {currentData.rmsNet} 
-                      <span className="text-[9px] font-normal text-slate-400"> / cible {currentData.targetRmtVal} €</span>
+                  <div className="bg-[#0E131F]/80 border border-slate-800 p-3.5 rounded-lg space-y-1">
+                    <span className="text-[9px] text-slate-400 block uppercase font-medium">2. RMT Net Actuel vs Cible</span>
+                    <div className="text-lg font-bold text-white">
+                      {currentSpectacleData.rmsNet} 
+                      <span className="text-[10px] font-normal text-cyan-400"> / cible {currentSpectacleData.targetRmtVal} €</span>
                     </div>
-                    <p className="text-[9px] text-emerald-400">Objectif production</p>
+                    <p className="text-[9px] text-cyan-400">Calculé via budget / jauge / obj</p>
                   </div>
 
-                  <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg space-y-1">
-                    <span className="text-[9px] text-slate-400 block uppercase">Équilibre Spectacle</span>
-                    <div className="text-base font-bold text-emerald-400">{currentData.coverage}% / cible {currentData.targetSr}%</div>
+                  <div className="bg-[#0E131F]/80 border border-slate-800 p-3.5 rounded-lg space-y-1">
+                    <span className="text-[9px] text-slate-400 block uppercase font-medium">3. Point d'Équilibre (Spectacle)</span>
+                    <div className={`text-lg font-bold ${specIsReached ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {specIsReached ? 'Atteint' : 'En cours'} ({currentSpectacleData.coverage}% / cible {currentSpectacleData.targetSr}%)
+                    </div>
                     <p className="text-[9px] text-slate-400">Couverture des charges</p>
                   </div>
 
-                  <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg space-y-1">
-                    <span className="text-[9px] text-slate-400 block uppercase">Réseaux de vente</span>
-                    <div className="text-[10px] text-slate-200">Guichet : <strong className="text-emerald-400">{currentData.networks.guichet.split(' ')[0]} pl.</strong></div>
+                  <div className="bg-[#0E131F]/80 border border-slate-800 p-3.5 rounded-lg space-y-1">
+                    <span className="text-[9px] text-slate-400 block uppercase font-medium">4. Canaux de Vente</span>
+                    <div className="text-[10px] font-medium text-slate-200 space-y-0.5 pt-0.5">
+                      <div className="flex justify-between"><span>Guichet :</span> <strong className="text-emerald-400">{currentSpectacleData.networks.guichet}</strong></div>
+                      <div className="flex justify-between"><span>Partenaires :</span> <strong className="text-amber-400">Actifs</strong></div>
+                    </div>
                   </div>
                 </div>
               </div>
