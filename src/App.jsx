@@ -7,16 +7,16 @@ export default function App() {
   const [openSpectacles, setOpenSpectacles] = useState({ 1: true, 2: false, 3: false });
   const [appliedYield, setAppliedYield] = useState(false);
 
-  // Paramètres globaux épurés (recentrés sur la billetterie)
+  // Paramètres globaux de billetterie
   const [venueType, setVenueType] = useState('Théâtre');
   const [defaultProfile, setDefaultProfile] = useState('Responsable Billetterie');
   const [targetRmt, setTargetRmt] = useState(34);
 
-  // Toggles de notifications simplifiés
+  // Toggles de notifications
   const [notifRentability, setNotifRentability] = useState(true);
   const [notifWeekly, setNotifWeekly] = useState(true);
 
-  // Paramètres spécifiques œuvre par œuvre (Coût de revient & Objectif d'équilibre)
+  // Modèles économiques œuvre par œuvre
   const [spectacleSettings, setSpectacleSettings] = useState({
     1: { title: 'Le Misanthrope', baseCost: 38.0, srTarget: 85 },
     2: { title: 'Le Dîner de Cons', baseCost: 32.0, srTarget: 75 },
@@ -30,7 +30,7 @@ export default function App() {
     }));
   };
 
-  // Catalogue complet des spectacles
+  // Catalogue complet des spectacles avec ventilation par réseaux de vente
   const spectaclesList = [
     {
       id: 1,
@@ -39,13 +39,13 @@ export default function App() {
       dates: '12 sept. — 04 oct. 2026',
       fillingRate: '26%',
       soldTickets: 1260,
+      totalCapacity: 5000,
       remainingTickets: 3540,
+      networks: { guichet: '45%', billetterieReduc: '35%', fnacReseau: '20%' },
       kpis: {
         rmsNet: '26.80 €',
-        rmsTarget: `${targetRmt}.00 €`,
-        rmsComment: '-10% sous la cible',
         coverage: 72,
-        status: 'Attention : Remplissage lent'
+        status: 'Attention : Jauge lente'
       },
       representations: [
         { id: 101, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places vendues' },
@@ -61,11 +61,11 @@ export default function App() {
       dates: '08 oct. — 30 oct. 2026',
       fillingRate: '68%',
       soldTickets: 3100,
+      totalCapacity: 4550,
       remainingTickets: 1450,
+      networks: { guichet: '60%', billetterieReduc: '25%', fnacReseau: '15%' },
       kpis: {
         rmsNet: '34.50 €',
-        rmsTarget: `${targetRmt}.00 €`,
-        rmsComment: '+8% au-dessus des prévisions',
         coverage: 88,
         status: 'Dynamique excellente'
       },
@@ -82,11 +82,11 @@ export default function App() {
       dates: '05 nov. — 20 nov. 2026',
       fillingRate: '91%',
       soldTickets: 4550,
+      totalCapacity: 5000,
       remainingTickets: 450,
+      networks: { guichet: '80%', billetterieReduc: '10%', fnacReseau: '10%' },
       kpis: {
         rmsNet: '41.20 €',
-        rmsTarget: `${targetRmt}.00 €`,
-        rmsComment: '+17% forte marge',
         coverage: 114,
         status: 'Quasi-complet'
       },
@@ -101,13 +101,17 @@ export default function App() {
   const currentData = selectedSpectacleId === 'all' 
     ? {
         title: 'Vue Globale (Toute la Saison)',
+        fillingRate: '62%',
+        soldTickets: '8 910 / 14 550 pl.',
         rmsNet: '31.20 €',
-        rmsTarget: `${targetRmt}.00 €`,
-        rmsComment: '+4% au-dessus des prévisions',
         coverage: 82,
-        status: 'Saison équilibrée'
+        status: 'Saison équilibrée',
+        networks: { guichet: '62%', billetterieReduc: '23%', fnacReseau: '15%' }
       }
-    : spectaclesList.find(s => s.id === Number(selectedSpectacleId)).kpis;
+    : {
+        ...spectaclesList.find(s => s.id === Number(selectedSpectacleId)),
+        soldTickets: `${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).soldTickets} / ${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).totalCapacity} pl.`
+      };
 
   const activeSrPercentage = selectedSpectacleId === 'all' 
     ? 80 
@@ -190,7 +194,7 @@ export default function App() {
         </header>
 
         {activeTab === 'Paramètres' ? (
-          /* ONGLET PARAMÈTRES ÉPURÉ & CENTRÉ BILLETTERIE */
+          /* ONGLET PARAMÈTRES */
           <div className="space-y-6 max-w-3xl">
             <div>
               <h2 className="text-sm font-semibold text-white">Paramètres de la Billetterie</h2>
@@ -241,7 +245,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Carte Modèles Économiques Œuvre par Œuvre */}
+            {/* Carte Modèles Économiques */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-5 space-y-4">
               <div>
                 <h3 className="text-xs font-semibold text-white">Modèles Économiques par Spectacle</h3>
@@ -315,7 +319,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD SIMPLIFIÉ ET CENTRÉ MÉTIER */
+          /* TABLEAU DE BORD PILIER MÉTIER (Jauge, Recette nette, Point mort, Réseaux) */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -343,26 +347,44 @@ export default function App() {
               </div>
             </div>
 
-            {/* 3 cartes KPIs recentrées sur les priorités billetterie */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* 4 cartes KPIs recentrées sur les 4 piliers billetterie */}
+            <div className="grid grid-cols-4 gap-4">
+              {/* 1. Jauge */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Recette Moyenne par Ticket (RMT Net)</span>
-                <div className="text-xl font-bold text-white">{currentData.rmsNet} <span className="text-[10px] font-normal text-slate-500">/ cible {targetRmt}.00 €</span></div>
-                <p className="text-[9px] text-emerald-400">{currentData.rmsComment}</p>
-              </div>
-
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Point d'Équilibre (Rentabilité)</span>
-                <div className={`text-xl font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
-                  {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({currentData.coverage}% / cible {activeSrPercentage}%)
+                <span className="text-[10px] text-slate-400 font-medium">1. Jauge (Taux de Remplissage)</span>
+                <div className="text-xl font-bold text-white">
+                  {selectedSpectacleId === 'all' ? currentData.fillingRate : currentData.fillingRate}
                 </div>
-                <p className="text-[9px] text-slate-500">Couverture des charges</p>
+                <p className="text-[9px] text-slate-400">Billets vendus : {currentData.soldTickets}</p>
               </div>
 
+              {/* 2. Recette Nette par place */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">État Général de la Représentation</span>
-                <div className="text-xl font-bold text-white">{currentData.status}</div>
-                <p className="text-[9px] text-emerald-400">Piloté par {defaultProfile}</p>
+                <span className="text-[10px] text-slate-400 font-medium">2. Recette Nette / Place (RMT)</span>
+                <div className="text-xl font-bold text-white">
+                  {selectedSpectacleId === 'all' ? currentData.rmsNet : currentData.kpis.rmsNet} 
+                  <span className="text-[10px] font-normal text-slate-500"> / cible {targetRmt} €</span>
+                </div>
+                <p className="text-[9px] text-emerald-400">Revenu réel après commissions</p>
+              </div>
+
+              {/* 3. Seuil de rentabilité / Point mort */}
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
+                <span className="text-[10px] text-slate-400 font-medium">3. Point Mort (Seuil de Rentabilité)</span>
+                <div className={`text-xl font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({currentData.coverage}% / {activeSrPercentage}%)
+                </div>
+                <p className="text-[9px] text-slate-500">Couverture des charges fixes</p>
+              </div>
+
+              {/* 4. Réseaux de vente */}
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
+                <span className="text-[10px] text-slate-400 font-medium">4. Canaux de Vente Principaux</span>
+                <div className="text-xs font-semibold text-slate-200 space-y-0.5 pt-1">
+                  <div className="flex justify-between"><span>Guichet direct :</span> <strong className="text-emerald-400">{currentData.networks.guichet}</strong></div>
+                  <div className="flex justify-between"><span>BilletReduc :</span> <strong className="text-amber-400">{currentData.networks.billetterieReduc}</strong></div>
+                  <div className="flex justify-between"><span>Réseau Fnac :</span> <strong className="text-slate-300">{currentData.networks.fnacReseau}</strong></div>
+                </div>
               </div>
             </div>
 
