@@ -31,7 +31,7 @@ export default function App() {
     }));
   };
 
-  // Catalogue complet des spectacles (canaux exprimés en % de la jauge totale de la salle)
+  // Catalogue complet des spectacles
   const spectaclesList = [
     {
       id: 1,
@@ -39,9 +39,10 @@ export default function App() {
       title: 'Le Misanthrope',
       dates: '12 sept. — 04 oct. 2026',
       fillingRate: '26%',
-      soldTickets: '1 260',
+      soldCount: 1260,
+      totalCap: 5000,
       remainingTickets: '3 540',
-      networks: { guichet: '12% de la jauge', billetterieReduc: '9% de la jauge', fnacReseau: '5% de la jauge' }, // Total = 26%
+      networks: { guichet: '567 pl. (45%)', billetterieReduc: '441 pl. (35%)', fnacReseau: '252 pl. (20%)' },
       kpis: {
         rmsNet: '26.80 €',
         coverage: 72,
@@ -60,9 +61,10 @@ export default function App() {
       title: 'Le Dîner de Cons',
       dates: '08 oct. — 30 oct. 2026',
       fillingRate: '68%',
-      soldTickets: '3 100',
+      soldCount: 3100,
+      totalCap: 4550,
       remainingTickets: '1 450',
-      networks: { guichet: '38% de la jauge', billetterieReduc: '18% de la jauge', fnacReseau: '12% de la jauge' }, // Total = 68%
+      networks: { guichet: '1 860 pl. (60%)', billetterieReduc: '775 pl. (25%)', fnacReseau: '465 pl. (15%)' },
       kpis: {
         rmsNet: '34.50 €',
         coverage: 88,
@@ -80,9 +82,10 @@ export default function App() {
       title: 'Fary — Aime',
       dates: '05 nov. — 20 nov. 2026',
       fillingRate: '91%',
-      soldTickets: '4 550',
+      soldCount: 4550,
+      totalCap: 5000,
       remainingTickets: '450',
-      networks: { guichet: '61% de la jauge', billetterieReduc: '18% de la jauge', fnacReseau: '12% de la jauge' }, // Total = 91%
+      networks: { guichet: '3 640 pl. (80%)', billetterieReduc: '455 pl. (10%)', fnacReseau: '455 pl. (10%)' },
       kpis: {
         rmsNet: '41.20 €',
         coverage: 114,
@@ -95,20 +98,36 @@ export default function App() {
     }
   ];
 
-  // Données KPIs dynamiques selon la sélection (Vue globale de saison : 38% + 14% + 10% = 62%)
+  // Calculs dynamiques de la Somme Totale de la Saison
+  const totalSoldTickets = spectaclesList.reduce((acc, s) => acc + s.soldCount, 0); // 8910
+  const totalCapacity = spectaclesList.reduce((acc, s) => acc + s.totalCap, 0); // 14550
+  const globalFillingRate = Math.round((totalSoldTickets / totalCapacity) * 100) + '%'; // 61%
+
+  // Somme des canaux par volume de places vendues sur la saison
+  const totalGuichet = Math.round(567 + 1860 + 3640); // 6 067 pl. (68%)
+  const totalBilletReduc = Math.round(441 + 775 + 455); // 1 671 pl. (19%)
+  const totalFnac = Math.round(252 + 465 + 455); // 1 172 pl. (13%)
+
+  // Données KPIs selon la sélection (Vue Globale = Somme cumulée)
   const currentData = selectedSpectacleId === 'all' 
     ? {
         title: 'Vue Globale (Toute la Saison)',
-        fillingRate: '62%',
-        soldTickets: '8 910 / 14 550 pl.',
+        fillingRate: globalFillingRate,
+        soldTicketsText: `${totalSoldTickets.toLocaleString()} / ${totalCapacity.toLocaleString()} pl.`,
         rmsNet: '31.20 €',
         coverage: 82,
         status: 'Saison équilibrée',
-        networks: { guichet: '38% de la jauge', billetterieReduc: '14% de la jauge', fnacReseau: '10% de la jauge' }
+        networks: { 
+          guichet: `${totalGuichet.toLocaleString()} pl. (68%)`, 
+          billetterieReduc: `${totalBilletReduc.toLocaleString()} pl. (19%)`, 
+          fnacReseau: `${totalFnac.toLocaleString()} pl. (13%)` 
+        }
       }
     : {
         ...spectaclesList.find(s => s.id === Number(selectedSpectacleId)),
-        soldTickets: `${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).soldTickets} / ${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).remainingTickets} pl.`
+        fillingRate: spectaclesList.find(s => s.id === Number(selectedSpectacleId)).fillingRate,
+        soldTicketsText: `${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).soldCount} / ${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).totalCap} pl.`,
+        networks: spectaclesList.find(s => s.id === Number(selectedSpectacleId)).networks
       };
 
   const activeSrPercentage = selectedSpectacleId === 'all' 
@@ -317,7 +336,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD COMPLET */
+          /* TABLEAU DE BORD COMPLET AVEC SOMME CUMULÉE */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -345,7 +364,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* 4 cartes KPIs avec Infobulles ⓘ */}
+            {/* 4 cartes KPIs (Cumul réel de saison) */}
             <div className="grid grid-cols-4 gap-4">
               {/* 1. Jauge */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
@@ -354,12 +373,12 @@ export default function App() {
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Taux de Jauge :</strong> Pourcentage de places vendues par rapport à la capacité totale de la salle.
+                      <strong>Taux de Jauge :</strong> Somme cumulée des places vendues sur l'ensemble des spectacles par rapport à la capacité totale.
                     </div>
                   </div>
                 </div>
                 <div className="text-xl font-bold text-white">{currentData.fillingRate}</div>
-                <p className="text-[9px] text-slate-400">Billets vendus : {currentData.soldTickets}</p>
+                <p className="text-[9px] text-slate-400">Total vendus : {currentData.soldTicketsText}</p>
               </div>
 
               {/* 2. Recette Nette par place */}
@@ -397,14 +416,14 @@ export default function App() {
                 <p className="text-[9px] text-slate-500">Couverture des coûts fixes</p>
               </div>
 
-              {/* 4. Réseaux de vente (Ventilés en % de la jauge totale) */}
+              {/* 4. Réseaux de vente (Somme cumulée des places par canal) */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-slate-400 font-medium">4. Canaux de Vente (% Jauge)</span>
+                  <span className="text-[10px] text-slate-400 font-medium">4. Canaux de Vente (Cumul Saison)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Canaux de Vente (% Jauge) :</strong> Ventilation du taux de remplissage global selon la part de chaque canal de distribution.
+                      <strong>Canaux de Vente :</strong> Somme totale des billets vendus par canal sur l'ensemble de la saison.
                     </div>
                   </div>
                 </div>
@@ -534,7 +553,7 @@ export default function App() {
                           </div>
                           <div className="text-right">
                             <span className="text-[9px] text-slate-400 block uppercase">Billets vendus</span>
-                            <span className="text-white font-bold">{spec.soldTickets}</span>
+                            <span className="text-white font-bold">{spec.soldCount}</span>
                           </div>
                           <div className="text-right">
                             <span className="text-[9px] text-slate-400 block uppercase">Places restantes</span>
