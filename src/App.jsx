@@ -16,25 +16,34 @@ export default function App() {
   const [notifRentability, setNotifRentability] = useState(true);
   const [notifWeekly, setNotifWeekly] = useState(true);
 
-  // Modèles économiques par spectacle avec Budget Total des Charges
+  // Modèles économiques par spectacle avec Jauge et Répartition par Catégorie (%)
   const [spectacleSettings, setSpectacleSettings] = useState({
     1: { 
       title: 'Le Misanthrope', 
-      totalBudget: 119000, // Budget total des charges
-      catOr: 55, cat1: 38, cat2: 22, 
-      srTarget: 85, sold: 1260, totalCap: 5000, rmsNetNum: 26.8 
+      totalBudget: 119000, 
+      totalCap: 5000, // Capacité totale vendable
+      catOr: 55, catOrPct: 20, // Prix et % de la jauge
+      cat1: 38, cat1Pct: 50, 
+      cat2: 22, cat2Pct: 30, 
+      srTarget: 85, sold: 1260, rmsNetNum: 26.8 
     },
     2: { 
       title: 'Le Dîner de Cons', 
       totalBudget: 106000, 
-      catOr: 50, cat1: 35, cat2: 20, 
-      srTarget: 75, sold: 3100, totalCap: 4550, rmsNetNum: 34.5 
+      totalCap: 4550, 
+      catOr: 50, catOrPct: 25, 
+      cat1: 35, cat1Pct: 45, 
+      cat2: 20, cat2Pct: 30, 
+      srTarget: 75, sold: 3100, rmsNetNum: 34.5 
     },
     3: { 
       title: 'Fary — Aime', 
       totalBudget: 133000, 
-      catOr: 60, cat1: 42, cat2: 25, 
-      srTarget: 70, sold: 4550, totalCap: 5000, rmsNetNum: 41.2 
+      totalCap: 5000, 
+      catOr: 60, catOrPct: 30, 
+      cat1: 42, cat1Pct: 40, 
+      cat2: 25, cat2Pct: 30, 
+      srTarget: 70, sold: 4550, rmsNetNum: 41.2 
     }
   });
 
@@ -97,7 +106,7 @@ export default function App() {
     }
   ];
 
-  // Fonction pour calculer le RMT cible automatique d'un spectacle
+  // Fonction pour calculer le RMT cible automatique basé sur la jauge et l'objectif
   const calculateTargetRmt = (spec) => {
     const targetSoldSeats = spec.totalCap * (spec.srTarget / 100);
     if (targetSoldSeats === 0) return 0;
@@ -118,7 +127,6 @@ export default function App() {
   }, 0);
   const globalCoverage = Math.round(weightedCoverageSum / totalSoldTickets);
 
-  // RMT cible global moyen pondéré basé sur les calculs automatiques
   const weightedTargetRmtSum = Object.values(spectacleSettings).reduce((acc, s) => {
     const specTargetRmt = calculateTargetRmt(s);
     return acc + (s.sold * specTargetRmt);
@@ -151,7 +159,7 @@ export default function App() {
         return {
           ...specListObj,
           fillingRate: specListObj.fillingRate,
-          soldTicketsText: `${specListObj.soldCount} / ${specListObj.totalCap} pl.`,
+          soldTicketsText: `${specListObj.soldCount} / ${spec.totalCap} pl.`,
           rmsNet: spec.rmsNetNum.toFixed(2) + ' €',
           coverage: spec.sold === 1260 ? 72 : spec.sold === 3100 ? 88 : 114,
           targetRmtVal: calculateTargetRmt(spec),
@@ -240,11 +248,11 @@ export default function App() {
         </header>
 
         {activeTab === 'Paramètres' ? (
-          /* ONGLET PARAMÈTRES AVEC BUDGET TOTAL DES CHARGES ET CALCUL DU RMT CIBLE */
+          /* ONGLET PARAMÈTRES AVEC CAPACITÉ ET RÉPARTITION PAR CATÉGORIE */
           <div className="space-y-6 max-w-3xl">
             <div>
               <h2 className="text-sm font-semibold text-white">Paramètres de la Billetterie</h2>
-              <p className="text-[10px] text-slate-400">Configurez le budget des charges et les grilles tarifaires par spectacle.</p>
+              <p className="text-[10px] text-slate-400">Configurez la capacité de la salle, les budgets et la ventilation par catégorie de vos spectacles.</p>
             </div>
 
             {/* Carte Établissement */}
@@ -281,32 +289,42 @@ export default function App() {
               </div>
             </div>
 
-            {/* Carte Budgets & Grilles par Spectacle */}
+            {/* Carte Budgets, Capacités & Répartitions */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-5 space-y-4">
               <div>
-                <h3 className="text-xs font-semibold text-white">Budgets de Production & Grilles Tarifaires</h3>
-                <p className="text-[10px] text-slate-400">Le RMT Cible Net est calculé automatiquement en divisant le budget par les places visées.</p>
+                <h3 className="text-xs font-semibold text-white">Modèles Économiques & Ventilation par Catégorie</h3>
+                <p className="text-[10px] text-slate-400">Ajustez la jauge vendable, le budget, et la répartition de la salle pour piloter le panier moyen.</p>
               </div>
 
-              <div className="space-y-4 pt-1">
+              <div className="space-y-5 pt-1">
                 {Object.keys(spectacleSettings).map((id) => {
                   const spec = spectacleSettings[id];
                   const calculatedRmt = calculateTargetRmt(spec);
-                  const avgPrice = Math.round((spec.catOr * 0.2 + spec.cat1 * 0.5 + spec.cat2 * 0.3));
+                  const avgPrice = Math.round((spec.catOr * (spec.catOrPct/100) + spec.cat1 * (spec.cat1Pct/100) + spec.cat2 * (spec.cat2Pct/100)));
 
                   return (
                     <div key={id} className="bg-[#0E131F] border border-slate-800 p-4 rounded-lg space-y-3">
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center border-b border-slate-800/80 pb-2">
                         <h4 className="font-bold text-white text-xs">{spec.title}</h4>
                         <div className="flex items-center gap-3">
                           <span className="text-[10px] text-emerald-400 font-medium">RMT Cible Calculé : <strong>{calculatedRmt} €</strong></span>
-                          <span className="text-[10px] text-slate-400">| Panier moyen : ~{avgPrice} €</span>
+                          <span className="text-[10px] text-slate-400">| Panier moyen macro : ~{avgPrice} €</span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-5 gap-3">
+                      <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[9px] text-slate-400 block">Budget Charges (€) :</label>
+                          <label className="text-[9px] text-slate-400 block">Capacité Vendable (places) :</label>
+                          <input
+                            type="number"
+                            value={spec.totalCap}
+                            onChange={(e) => handleSpectacleSettingChange(id, 'totalCap', e.target.value)}
+                            className="w-full bg-[#131927] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs font-semibold"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-slate-400 block">Budget Total des Charges (€) :</label>
                           <input
                             type="number"
                             value={spec.totalBudget}
@@ -316,43 +334,49 @@ export default function App() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] text-slate-400 block">Carré Or (€) :</label>
-                          <input
-                            type="number"
-                            value={spec.catOr}
-                            onChange={(e) => handleSpectacleSettingChange(id, 'catOr', e.target.value)}
-                            className="w-full bg-[#131927] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[9px] text-slate-400 block">1ère Cat. (€) :</label>
-                          <input
-                            type="number"
-                            value={spec.cat1}
-                            onChange={(e) => handleSpectacleSettingChange(id, 'cat1', e.target.value)}
-                            className="w-full bg-[#131927] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[9px] text-slate-400 block">2ème Cat. (€) :</label>
-                          <input
-                            type="number"
-                            value={spec.cat2}
-                            onChange={(e) => handleSpectacleSettingChange(id, 'cat2', e.target.value)}
-                            className="w-full bg-[#131927] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[9px] text-slate-400 block">Obj. Remplis. (%) :</label>
+                          <label className="text-[9px] text-slate-400 block">Objectif Remplissage (%) :</label>
                           <input
                             type="number"
                             value={spec.srTarget}
                             onChange={(e) => handleSpectacleSettingChange(id, 'srTarget', e.target.value)}
                             className="w-full bg-[#131927] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
                           />
+                        </div>
+                      </div>
+
+                      {/* Répartition par catégorie */}
+                      <div className="grid grid-cols-3 gap-3 pt-2 border-t border-slate-800/60">
+                        <div className="bg-[#131927] p-2 rounded border border-slate-800 space-y-1">
+                          <div className="flex justify-between text-[9px] text-slate-400">
+                            <span>Carré Or</span>
+                            <span>{Math.round(spec.totalCap * (spec.catOrPct/100))} pl.</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <input type="number" value={spec.catOr} onChange={(e) => handleSpectacleSettingChange(id, 'catOr', e.target.value)} className="w-1/2 bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px]" placeholder="Prix €" />
+                            <input type="number" value={spec.catOrPct} onChange={(e) => handleSpectacleSettingChange(id, 'catOrPct', e.target.value)} className="w-1/2 bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px]" placeholder="% jauge" />
+                          </div>
+                        </div>
+
+                        <div className="bg-[#131927] p-2 rounded border border-slate-800 space-y-1">
+                          <div className="flex justify-between text-[9px] text-slate-400">
+                            <span>1ère Catégorie</span>
+                            <span>{Math.round(spec.totalCap * (spec.cat1Pct/100))} pl.</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <input type="number" value={spec.cat1} onChange={(e) => handleSpectacleSettingChange(id, 'cat1', e.target.value)} className="w-1/2 bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px]" placeholder="Prix €" />
+                            <input type="number" value={spec.cat1Pct} onChange={(e) => handleSpectacleSettingChange(id, 'cat1Pct', e.target.value)} className="w-1/2 bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px]" placeholder="% jauge" />
+                          </div>
+                        </div>
+
+                        <div className="bg-[#131927] p-2 rounded border border-slate-800 space-y-1">
+                          <div className="flex justify-between text-[9px] text-slate-400">
+                            <span>2ème Catégorie</span>
+                            <span>{Math.round(spec.totalCap * (spec.cat2Pct/100))} pl.</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <input type="number" value={spec.cat2} onChange={(e) => handleSpectacleSettingChange(id, 'cat2', e.target.value)} className="w-1/2 bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px]" placeholder="Prix €" />
+                            <input type="number" value={spec.cat2Pct} onChange={(e) => handleSpectacleSettingChange(id, 'cat2Pct', e.target.value)} className="w-1/2 bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px]" placeholder="% jauge" />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -434,7 +458,7 @@ export default function App() {
                 <p className="text-[9px] text-slate-400">Total vendus : {currentData.soldTicketsText}</p>
               </div>
 
-              {/* 2. Recette Nette / Place (RMT) avec cible calculée automatiquement */}
+              {/* 2. Recette Nette / Place (RMT) */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-400 font-medium">2. Recette Nette / Place (RMT)</span>
