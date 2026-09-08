@@ -7,17 +7,14 @@ export default function App() {
   const [openSpectacles, setOpenSpectacles] = useState({ 1: true, 2: false, 3: false });
   const [appliedYield, setAppliedYield] = useState(false);
 
-  // Paramètres globaux (Interface Lovable)
+  // Paramètres globaux épurés (recentrés sur la billetterie)
   const [venueType, setVenueType] = useState('Théâtre');
   const [defaultProfile, setDefaultProfile] = useState('Responsable Billetterie');
-  const [maxCac, setMaxCac] = useState(5);
-  const [alertTan, setAlertTan] = useState(5);
   const [targetRmt, setTargetRmt] = useState(34);
 
-  // Toggles de notifications
+  // Toggles de notifications simplifiés
   const [notifRentability, setNotifRentability] = useState(true);
   const [notifWeekly, setNotifWeekly] = useState(true);
-  const [notifCompetitor, setNotifCompetitor] = useState(false);
 
   // Paramètres spécifiques œuvre par œuvre (Coût de revient & Objectif d'équilibre)
   const [spectacleSettings, setSpectacleSettings] = useState({
@@ -48,9 +45,7 @@ export default function App() {
         rmsTarget: `${targetRmt}.00 €`,
         rmsComment: '-10% sous la cible',
         coverage: 72,
-        cac: `${maxCac}.20 € / billet`,
-        cacStatus: 'Frais marketing élevés',
-        cancellation: `${alertTan}.1%`
+        status: 'Attention : Remplissage lent'
       },
       representations: [
         { id: 101, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places vendues' },
@@ -72,9 +67,7 @@ export default function App() {
         rmsTarget: `${targetRmt}.00 €`,
         rmsComment: '+8% au-dessus des prévisions',
         coverage: 88,
-        cac: '4.10 € / billet',
-        cacStatus: 'Maîtrisé',
-        cancellation: '2.0%'
+        status: 'Dynamique excellente'
       },
       representations: [
         { id: 201, date: 'Mer. 08 Oct. — 20h30', rmsNet: 34.0, seats: '420/500 places vendues' },
@@ -95,9 +88,7 @@ export default function App() {
         rmsTarget: `${targetRmt}.00 €`,
         rmsComment: '+17% forte marge',
         coverage: 114,
-        cac: '2.90 € / billet',
-        cacStatus: 'Optimal (zéro pub tierce)',
-        cancellation: '1.2%'
+        status: 'Quasi-complet'
       },
       representations: [
         { id: 301, date: 'Jeu. 05 Nov. — 20h00', rmsNet: 42.0, seats: '490/500 places vendues' },
@@ -114,9 +105,7 @@ export default function App() {
         rmsTarget: `${targetRmt}.00 €`,
         rmsComment: '+4% au-dessus des prévisions',
         coverage: 82,
-        cac: `${maxCac}.80 € / billet`,
-        cacStatus: 'Frais marketing sous surveillance',
-        cancellation: `${alertTan - 0.1}%`
+        status: 'Saison équilibrée'
       }
     : spectaclesList.find(s => s.id === Number(selectedSpectacleId)).kpis;
 
@@ -201,18 +190,18 @@ export default function App() {
         </header>
 
         {activeTab === 'Paramètres' ? (
-          /* ONGLET PARAMÈTRES UNIFIÉ (LOVABLE + COÛT DE REVIENT & ÉQUILIBRE SPÉCIFIQUE) */
+          /* ONGLET PARAMÈTRES ÉPURÉ & CENTRÉ BILLETTERIE */
           <div className="space-y-6 max-w-3xl">
             <div>
-              <h2 className="text-sm font-semibold text-white">Paramètres</h2>
-              <p className="text-[10px] text-slate-400">Réglez les seuils d'alerte et configurez les modèles économiques œuvre par œuvre.</p>
+              <h2 className="text-sm font-semibold text-white">Paramètres de la Billetterie</h2>
+              <p className="text-[10px] text-slate-400">Configurez votre établissement et les modèles économiques de vos spectacles.</p>
             </div>
 
             {/* Carte Établissement */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-5 space-y-4">
-              <h3 className="text-xs font-semibold text-white">Établissement</h3>
+              <h3 className="text-xs font-semibold text-white">Établissement & Objectif Principal</h3>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <label className="text-[11px] text-slate-300 font-medium block">Type d'établissement</label>
                   <select
@@ -228,7 +217,7 @@ export default function App() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300 font-medium block">Profil métier par défaut</label>
+                  <label className="text-[11px] text-slate-300 font-medium block">Profil métier</label>
                   <select
                     value={defaultProfile}
                     onChange={(e) => setDefaultProfile(e.target.value)}
@@ -239,36 +228,9 @@ export default function App() {
                     <option value="Responsable Marketing">Responsable Marketing</option>
                   </select>
                 </div>
-              </div>
-            </div>
-
-            {/* Carte Seuils d'alerte */}
-            <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-5 space-y-4">
-              <h3 className="text-xs font-semibold text-white">Seuils d'alerte globaux</h3>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300 font-medium block">CAC maximum (€)</label>
-                  <input
-                    type="number"
-                    value={maxCac}
-                    onChange={(e) => setMaxCac(Number(e.target.value))}
-                    className="w-full bg-[#0E131F] border border-slate-700 rounded px-3 py-2 text-white text-xs"
-                  />
-                </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300 font-medium block">TAN d'alerte (%)</label>
-                  <input
-                    type="number"
-                    value={alertTan}
-                    onChange={(e) => setAlertTan(Number(e.target.value))}
-                    className="w-full bg-[#0E131F] border border-slate-700 rounded px-3 py-2 text-white text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300 font-medium block">RMT cible (€)</label>
+                  <label className="text-[11px] text-slate-300 font-medium block">RMT Cible (€ / billet)</label>
                   <input
                     type="number"
                     value={targetRmt}
@@ -282,8 +244,8 @@ export default function App() {
             {/* Carte Modèles Économiques Œuvre par Œuvre */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-5 space-y-4">
               <div>
-                <h3 className="text-xs font-semibold text-white">Spécificités Économiques Œuvre par Œuvre</h3>
-                <p className="text-[10px] text-slate-400">Configurez le coût de revient unitaire et l'objectif d'équilibre spécifique de chaque production.</p>
+                <h3 className="text-xs font-semibold text-white">Modèles Économiques par Spectacle</h3>
+                <p className="text-[10px] text-slate-400">Ajustez le coût de revient unitaire et le taux de couverture requis pour chaque production.</p>
               </div>
 
               <div className="space-y-3 pt-1">
@@ -327,11 +289,11 @@ export default function App() {
 
             {/* Carte Notifications */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-5 space-y-4">
-              <h3 className="text-xs font-semibold text-white">Notifications</h3>
+              <h3 className="text-xs font-semibold text-white">Alertes & Notifications</h3>
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-300">Alerte vente sous le seuil de rentabilité</span>
+                  <span className="text-slate-300">Alerte séance sous le seuil de rentabilité</span>
                   <button
                     onClick={() => setNotifRentability(!notifRentability)}
                     className={`w-9 h-5 flex items-center rounded-full p-1 transition cursor-pointer ${notifRentability ? 'bg-emerald-500 justify-end' : 'bg-slate-700 justify-start'}`}
@@ -341,20 +303,10 @@ export default function App() {
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-300">Rapport hebdomadaire d'audit</span>
+                  <span className="text-slate-300">Rapport hebdomadaire de remplissage</span>
                   <button
                     onClick={() => setNotifWeekly(!notifWeekly)}
                     className={`w-9 h-5 flex items-center rounded-full p-1 transition cursor-pointer ${notifWeekly ? 'bg-emerald-500 justify-end' : 'bg-slate-700 justify-start'}`}
-                  >
-                    <div className="bg-white w-3.5 h-3.5 rounded-full shadow-md"></div>
-                  </button>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-300">Veille concurrentielle quotidienne</span>
-                  <button
-                    onClick={() => setNotifCompetitor(!notifCompetitor)}
-                    className={`w-9 h-5 flex items-center rounded-full p-1 transition cursor-pointer ${notifCompetitor ? 'bg-emerald-500 justify-end' : 'bg-slate-700 justify-start'}`}
                   >
                     <div className="bg-white w-3.5 h-3.5 rounded-full shadow-md"></div>
                   </button>
@@ -363,7 +315,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD */
+          /* TABLEAU DE BORD SIMPLIFIÉ ET CENTRÉ MÉTIER */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -391,10 +343,10 @@ export default function App() {
               </div>
             </div>
 
-            {/* 4 cartes KPIs dynamiques */}
-            <div className="grid grid-cols-4 gap-4">
+            {/* 3 cartes KPIs recentrées sur les priorités billetterie */}
+            <div className="grid grid-cols-3 gap-4">
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Revenu Net Moyen / Billet (RMT)</span>
+                <span className="text-[10px] text-slate-400 font-medium">Recette Moyenne par Ticket (RMT Net)</span>
                 <div className="text-xl font-bold text-white">{currentData.rmsNet} <span className="text-[10px] font-normal text-slate-500">/ cible {targetRmt}.00 €</span></div>
                 <p className="text-[9px] text-emerald-400">{currentData.rmsComment}</p>
               </div>
@@ -404,19 +356,13 @@ export default function App() {
                 <div className={`text-xl font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
                   {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({currentData.coverage}% / cible {activeSrPercentage}%)
                 </div>
-                <p className="text-[9px] text-slate-500">Profil : {defaultProfile}</p>
+                <p className="text-[9px] text-slate-500">Couverture des charges</p>
               </div>
 
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Coût d'Acquisition (CAC max : {maxCac} €)</span>
-                <div className="text-xl font-bold text-amber-400">{currentData.cac}</div>
-                <p className="text-[9px] text-amber-500/80">{currentData.cacStatus}</p>
-              </div>
-
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">Taux d'Annulation (TAN max : {alertTan}%)</span>
-                <div className="text-xl font-bold text-white">{currentData.cancellation}</div>
-                <p className="text-[9px] text-emerald-400">Niveau optimal</p>
+                <span className="text-[10px] text-slate-400 font-medium">État Général de la Représentation</span>
+                <div className="text-xl font-bold text-white">{currentData.status}</div>
+                <p className="text-[9px] text-emerald-400">Piloté par {defaultProfile}</p>
               </div>
             </div>
 
@@ -450,7 +396,7 @@ export default function App() {
                             <div key={rep.id} className="p-3 flex justify-between items-center bg-[#131927]/40">
                               <div>
                                 <span className="font-medium text-white block">{rep.date}</span>
-                                <span className="text-slate-400">Revenu net moyen : <strong>{rep.rmsNet} €</strong> | Cible RMT : <strong>{targetRmt} €</strong></span>
+                                <span className="text-slate-400">Recette nette : <strong>{rep.rmsNet} €</strong> | Objectif RMT : <strong>{targetRmt} €</strong></span>
                               </div>
                               <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                 ✓ Séance conforme
