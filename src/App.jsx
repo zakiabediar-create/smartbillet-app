@@ -16,22 +16,25 @@ export default function App() {
   const [notifRentability, setNotifRentability] = useState(true);
   const [notifWeekly, setNotifWeekly] = useState(true);
 
-  // Modèles économiques par spectacle avec RMT Cible dédié
+  // Modèles économiques par spectacle avec Budget Total des Charges
   const [spectacleSettings, setSpectacleSettings] = useState({
     1: { 
       title: 'Le Misanthrope', 
+      totalBudget: 119000, // Budget total des charges
       catOr: 55, cat1: 38, cat2: 22, 
-      srTarget: 85, targetRmt: 28, sold: 1260, totalCap: 5000, rmsNetNum: 26.8 
+      srTarget: 85, sold: 1260, totalCap: 5000, rmsNetNum: 26.8 
     },
     2: { 
       title: 'Le Dîner de Cons', 
+      totalBudget: 106000, 
       catOr: 50, cat1: 35, cat2: 20, 
-      srTarget: 75, targetRmt: 32, sold: 3100, totalCap: 4550, rmsNetNum: 34.5 
+      srTarget: 75, sold: 3100, totalCap: 4550, rmsNetNum: 34.5 
     },
     3: { 
       title: 'Fary — Aime', 
+      totalBudget: 133000, 
       catOr: 60, cat1: 42, cat2: 25, 
-      srTarget: 70, targetRmt: 38, sold: 4550, totalCap: 5000, rmsNetNum: 41.2 
+      srTarget: 70, sold: 4550, totalCap: 5000, rmsNetNum: 41.2 
     }
   });
 
@@ -94,6 +97,13 @@ export default function App() {
     }
   ];
 
+  // Fonction pour calculer le RMT cible automatique d'un spectacle
+  const calculateTargetRmt = (spec) => {
+    const targetSoldSeats = spec.totalCap * (spec.srTarget / 100);
+    if (targetSoldSeats === 0) return 0;
+    return Math.round((spec.totalBudget / targetSoldSeats) * 10) / 10;
+  };
+
   // Calculs globaux de la saison
   const totalSoldTickets = Object.values(spectacleSettings).reduce((acc, s) => acc + s.sold, 0);
   const totalCapacity = Object.values(spectacleSettings).reduce((acc, s) => acc + s.totalCap, 0);
@@ -108,8 +118,11 @@ export default function App() {
   }, 0);
   const globalCoverage = Math.round(weightedCoverageSum / totalSoldTickets);
 
-  // RMT cible global moyen (pondéré)
-  const weightedTargetRmtSum = Object.values(spectacleSettings).reduce((acc, s) => acc + (s.sold * s.targetRmt), 0);
+  // RMT cible global moyen pondéré basé sur les calculs automatiques
+  const weightedTargetRmtSum = Object.values(spectacleSettings).reduce((acc, s) => {
+    const specTargetRmt = calculateTargetRmt(s);
+    return acc + (s.sold * specTargetRmt);
+  }, 0);
   const globalTargetRmt = Math.round(weightedTargetRmtSum / totalSoldTickets);
 
   const globalTargetSr = Math.round(Object.values(spectacleSettings).reduce((acc, s) => acc + s.srTarget, 0) / 3);
@@ -132,15 +145,19 @@ export default function App() {
           fnacReseau: `${totalFnac.toLocaleString()} pl. (13%)` 
         }
       }
-    : {
-        ...spectaclesList.find(s => s.id === Number(selectedSpectacleId)),
-        fillingRate: spectaclesList.find(s => s.id === Number(selectedSpectacleId)).fillingRate,
-        soldTicketsText: `${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).soldCount} / ${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).totalCap} pl.`,
-        rmsNet: spectacleSettings[selectedSpectacleId].rmsNetNum.toFixed(2) + ' €',
-        coverage: spectacleSettings[selectedSpectacleId].sold === 1260 ? 72 : spectacleSettings[selectedSpectacleId].sold === 3100 ? 88 : 114,
-        targetRmtVal: spectacleSettings[selectedSpectacleId].targetRmt,
-        networks: spectaclesList.find(s => s.id === Number(selectedSpectacleId)).networks
-      };
+    : (() => {
+        const spec = spectacleSettings[selectedSpectacleId];
+        const specListObj = spectaclesList.find(s => s.id === Number(selectedSpectacleId));
+        return {
+          ...specListObj,
+          fillingRate: specListObj.fillingRate,
+          soldTicketsText: `${specListObj.soldCount} / ${specListObj.totalCap} pl.`,
+          rmsNet: spec.rmsNetNum.toFixed(2) + ' €',
+          coverage: spec.sold === 1260 ? 72 : spec.sold === 3100 ? 88 : 114,
+          targetRmtVal: calculateTargetRmt(spec),
+          networks: specListObj.networks
+        };
+      })();
 
   const activeSrPercentage = selectedSpectacleId === 'all' 
     ? globalTargetSr 
@@ -223,11 +240,11 @@ export default function App() {
         </header>
 
         {activeTab === 'Paramètres' ? (
-          /* ONGLET PARAMÈTRES AVEC RMT CIBLE PAR SPECTACLE */
+          /* ONGLET PARAMÈTRES AVEC BUDGET TOTAL DES CHARGES ET CALCUL DU RMT CIBLE */
           <div className="space-y-6 max-w-3xl">
             <div>
               <h2 className="text-sm font-semibold text-white">Paramètres de la Billetterie</h2>
-              <p className="text-[10px] text-slate-400">Configurez votre établissement et les objectifs financiers par spectacle.</p>
+              <p className="text-[10px] text-slate-400">Configurez le budget des charges et les grilles tarifaires par spectacle.</p>
             </div>
 
             {/* Carte Établissement */}
@@ -264,33 +281,37 @@ export default function App() {
               </div>
             </div>
 
-            {/* Carte Grilles Tarifaires & RMT Cible par Spectacle */}
+            {/* Carte Budgets & Grilles par Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-5 space-y-4">
               <div>
-                <h3 className="text-xs font-semibold text-white">Objectifs Financiers & Grilles par Spectacle</h3>
-                <p className="text-[10px] text-slate-400">Définissez le RMT Cible net et les prix publics par catégorie pour chaque production.</p>
+                <h3 className="text-xs font-semibold text-white">Budgets de Production & Grilles Tarifaires</h3>
+                <p className="text-[10px] text-slate-400">Le RMT Cible Net est calculé automatiquement en divisant le budget par les places visées.</p>
               </div>
 
               <div className="space-y-4 pt-1">
                 {Object.keys(spectacleSettings).map((id) => {
                   const spec = spectacleSettings[id];
+                  const calculatedRmt = calculateTargetRmt(spec);
                   const avgPrice = Math.round((spec.catOr * 0.2 + spec.cat1 * 0.5 + spec.cat2 * 0.3));
 
                   return (
                     <div key={id} className="bg-[#0E131F] border border-slate-800 p-4 rounded-lg space-y-3">
                       <div className="flex justify-between items-center">
                         <h4 className="font-bold text-white text-xs">{spec.title}</h4>
-                        <span className="text-[10px] text-emerald-400 font-medium">Panier moyen indicatif : ~{avgPrice} €</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] text-emerald-400 font-medium">RMT Cible Calculé : <strong>{calculatedRmt} €</strong></span>
+                          <span className="text-[10px] text-slate-400">| Panier moyen : ~{avgPrice} €</span>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-5 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[9px] text-slate-400 block">RMT Cible Net (€) :</label>
+                          <label className="text-[9px] text-slate-400 block">Budget Charges (€) :</label>
                           <input
                             type="number"
-                            value={spec.targetRmt}
-                            onChange={(e) => handleSpectacleSettingChange(id, 'targetRmt', e.target.value)}
-                            className="w-full bg-[#131927] border border-emerald-500/50 rounded px-2.5 py-1.5 text-emerald-400 font-bold text-xs"
+                            value={spec.totalBudget}
+                            onChange={(e) => handleSpectacleSettingChange(id, 'totalBudget', e.target.value)}
+                            className="w-full bg-[#131927] border border-slate-700 rounded px-2.5 py-1.5 text-white text-xs"
                           />
                         </div>
 
@@ -413,7 +434,7 @@ export default function App() {
                 <p className="text-[9px] text-slate-400">Total vendus : {currentData.soldTicketsText}</p>
               </div>
 
-              {/* 2. Recette Nette / Place (RMT) avec cible dynamique */}
+              {/* 2. Recette Nette / Place (RMT) avec cible calculée automatiquement */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-400 font-medium">2. Recette Nette / Place (RMT)</span>
@@ -564,8 +585,10 @@ export default function App() {
               <div className="space-y-3">
                 {spectaclesList.map((spec) => {
                   const isOpen = openSpectacles[spec.id];
-                  const specTarget = spectacleSettings[spec.id].srTarget;
-                  const specRmtTarget = spectacleSettings[spec.id].targetRmt;
+                  const specSettingsObj = spectacleSettings[spec.id];
+                  const specTarget = specSettingsObj.srTarget;
+                  const specRmtTarget = calculateTargetRmt(specSettingsObj);
+
                   return (
                     <div key={spec.id} className="border border-slate-800/80 rounded-lg overflow-hidden bg-[#0E131F]">
                       <button
