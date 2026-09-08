@@ -5,7 +5,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('Tableau de bord');
   const [selectedSpectacleId, setSelectedSpectacleId] = useState('all');
   const [openSpectacles, setOpenSpectacles] = useState({ 1: true, 2: false, 3: false });
-  const [appliedYield, setAppliedYield] = useState(false);
+  const [autoYieldPrice, setAutoYieldPrice] = useState(5);
 
   // Paramètres globaux de billetterie
   const [venueType, setVenueType] = useState('Théâtre');
@@ -30,7 +30,7 @@ export default function App() {
     }));
   };
 
-  // Catalogue complet des spectacles avec ventilation par réseaux de vente
+  // Catalogue complet des spectacles
   const spectaclesList = [
     {
       id: 1,
@@ -319,7 +319,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD PILIER MÉTIER (Jauge, Recette nette, Point mort, Réseaux) */
+          /* TABLEAU DE BORD AVEC 4 PILIERS + SIMULATEUR DE YIELD ET TOOLTIPS ⓘ */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -347,20 +347,34 @@ export default function App() {
               </div>
             </div>
 
-            {/* 4 cartes KPIs recentrées sur les 4 piliers billetterie */}
+            {/* 4 cartes KPIs avec Infobulles ⓘ */}
             <div className="grid grid-cols-4 gap-4">
               {/* 1. Jauge */}
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">1. Jauge (Taux de Remplissage)</span>
-                <div className="text-xl font-bold text-white">
-                  {selectedSpectacleId === 'all' ? currentData.fillingRate : currentData.fillingRate}
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-slate-400 font-medium">1. Jauge (Taux de Remplissage)</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Taux de Jauge :</strong> Pourcentage de places vendues par rapport à la capacité totale de la salle.
+                    </div>
+                  </div>
                 </div>
+                <div className="text-xl font-bold text-white">{currentData.fillingRate}</div>
                 <p className="text-[9px] text-slate-400">Billets vendus : {currentData.soldTickets}</p>
               </div>
 
               {/* 2. Recette Nette par place */}
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">2. Recette Nette / Place (RMT)</span>
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-slate-400 font-medium">2. Recette Nette / Place (RMT)</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>RMT Net :</strong> Revenu moyen réel encaissé par billet après déduction des commissions des réseaux.
+                    </div>
+                  </div>
+                </div>
                 <div className="text-xl font-bold text-white">
                   {selectedSpectacleId === 'all' ? currentData.rmsNet : currentData.kpis.rmsNet} 
                   <span className="text-[10px] font-normal text-slate-500"> / cible {targetRmt} €</span>
@@ -369,8 +383,16 @@ export default function App() {
               </div>
 
               {/* 3. Seuil de rentabilité / Point mort */}
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">3. Point Mort (Seuil de Rentabilité)</span>
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-slate-400 font-medium">3. Point Mort (Rentabilité)</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Point Mort :</strong> Indique si la billetterie couvre les charges fixes de la production selon l'objectif configuré.
+                    </div>
+                  </div>
+                </div>
                 <div className={`text-xl font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
                   {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({currentData.coverage}% / {activeSrPercentage}%)
                 </div>
@@ -378,8 +400,16 @@ export default function App() {
               </div>
 
               {/* 4. Réseaux de vente */}
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] text-slate-400 font-medium">4. Canaux de Vente Principaux</span>
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-slate-400 font-medium">4. Canaux de Vente Principaux</span>
+                  <div className="group relative flex items-center cursor-pointer">
+                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Canaux de Vente :</strong> Répartition des ventes entre la billetterie directe et les réseaux partenaires.
+                    </div>
+                  </div>
+                </div>
                 <div className="text-xs font-semibold text-slate-200 space-y-0.5 pt-1">
                   <div className="flex justify-between"><span>Guichet direct :</span> <strong className="text-emerald-400">{currentData.networks.guichet}</strong></div>
                   <div className="flex justify-between"><span>BilletReduc :</span> <strong className="text-amber-400">{currentData.networks.billetterieReduc}</strong></div>
@@ -430,6 +460,42 @@ export default function App() {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Simulateur de Yield ("Mode Et Si ?") avec infobulle explicative */}
+            <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xs font-semibold text-white">Simulateur d'Impact Tarifaire ("Mode Et Si ?")</h3>
+                <div className="group relative flex items-center cursor-pointer">
+                  <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
+                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                    <strong>Simulateur :</strong> Estimez l'impact financier net d'une modification tarifaire sur vos carrés VIP.
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <div className="col-span-2 space-y-3">
+                  <div>
+                    <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                      <span>Hausse tarifaire sur les places VIP (+{autoYieldPrice} €)</span>
+                      <span className="text-emerald-400">+{autoYieldPrice} €</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="15"
+                      value={autoYieldPrice}
+                      onChange={(e) => setAutoYieldPrice(Number(e.target.value))}
+                      className="w-full accent-emerald-400 cursor-pointer"
+                    />
+                  </div>
+                </div>
+                <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg text-center space-y-1">
+                  <span className="text-[9px] text-slate-500 uppercase tracking-wider block">Impact financier net estimé</span>
+                  <div className="text-lg font-bold text-emerald-400">+{autoYieldPrice * 955} €</div>
+                </div>
               </div>
             </div>
           </>
