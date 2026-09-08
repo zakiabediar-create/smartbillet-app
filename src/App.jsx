@@ -20,11 +20,11 @@ export default function App() {
   const [spectacleSettings, setSpectacleSettings] = useState({
     1: { 
       title: 'Le Misanthrope', 
-      totalBudget: 119000, 
+      totalBudget: 119010, 
       totalCap: 5000, 
-      catOr: 55, catOrSeats: 1000, 
+      catOr: 55, catOrSeats: 1004, 
       cat1: 38, cat1Seats: 2500, 
-      cat2: 22, cat2Seats: 1500, 
+      cat2: 22, cat2Seats: 1496, 
       srTarget: 85, sold: 1260, rmsNetNum: 26.8 
     },
     2: { 
@@ -47,7 +47,6 @@ export default function App() {
     }
   });
 
-  // Gestion intelligente de la modification avec rééquilibrage automatique des autres catégories
   const handleSeatChange = (id, changedCat, newSeatsValue) => {
     setSpectacleSettings(prev => {
       const spec = prev[id];
@@ -74,7 +73,6 @@ export default function App() {
         updated.cat2Seats = Math.max(0, remaining);
       } else if (changedCat === 'cat2') {
         updated.cat2Seats = val;
-        // Laisser 1ère cat absorber le reste si besoin, ou vice versa
       }
 
       return { ...prev, [id]: updated };
@@ -171,20 +169,22 @@ export default function App() {
   const totalBilletReduc = 441 + 775 + 455;
   const totalFnac = 252 + 465 + 455;
 
+  const globalData = {
+    fillingRate: globalFillingRate,
+    soldTicketsText: `${totalSoldTickets.toLocaleString()} / ${totalCapacity.toLocaleString()} pl.`,
+    rmsNet: `${globalWeightedRmt} €`,
+    coverage: globalCoverage,
+    targetRmtVal: globalTargetRmt,
+    targetSr: globalTargetSr,
+    networks: { 
+      guichet: `${totalGuichet.toLocaleString()} pl. (68%)`, 
+      billetterieReduc: `${totalBilletReduc.toLocaleString()} pl. (19%)`, 
+      fnacReseau: `${totalFnac.toLocaleString()} pl. (13%)` 
+    }
+  };
+
   const currentData = selectedSpectacleId === 'all' 
-    ? {
-        title: 'Vue Globale (Toute la Saison)',
-        fillingRate: globalFillingRate,
-        soldTicketsText: `${totalSoldTickets.toLocaleString()} / ${totalCapacity.toLocaleString()} pl.`,
-        rmsNet: `${globalWeightedRmt} €`,
-        coverage: globalCoverage,
-        targetRmtVal: globalTargetRmt,
-        networks: { 
-          guichet: `${totalGuichet.toLocaleString()} pl. (68%)`, 
-          billetterieReduc: `${totalBilletReduc.toLocaleString()} pl. (19%)`, 
-          fnacReseau: `${totalFnac.toLocaleString()} pl. (13%)` 
-        }
-      }
+    ? null
     : (() => {
         const spec = spectacleSettings[selectedSpectacleId];
         const specListObj = spectaclesList.find(s => s.id === Number(selectedSpectacleId));
@@ -195,15 +195,17 @@ export default function App() {
           rmsNet: spec.rmsNetNum.toFixed(2) + ' €',
           coverage: spec.sold === 1260 ? 72 : spec.sold === 3100 ? 88 : 114,
           targetRmtVal: calculateTargetRmt(spec),
+          targetSr: spec.srTarget,
           networks: specListObj.networks
         };
       })();
 
   const activeSrPercentage = selectedSpectacleId === 'all' 
-    ? globalTargetSr 
+    ? globalData.targetSr 
     : spectacleSettings[selectedSpectacleId].srTarget;
 
-  const isSREffectivelyReached = currentData.coverage >= activeSrPercentage;
+  const activeCoverage = selectedSpectacleId === 'all' ? globalData.coverage : currentData.coverage;
+  const isSREffectivelyReached = activeCoverage >= activeSrPercentage;
 
   const toggleSpectacleAccordion = (id) => {
     setOpenSpectacles(prev => ({ ...prev, [id]: !prev[id] }));
@@ -280,7 +282,7 @@ export default function App() {
         </header>
 
         {activeTab === 'Paramètres' ? (
-          /* ONGLET PARAMÈTRES AVEC RÉÉQUILIBRAGE AUTOMATIQUE DES PLACES */
+          /* ONGLET PARAMÈTRES */
           <div className="space-y-6 max-w-3xl">
             <div>
               <h2 className="text-sm font-semibold text-white">Paramètres de la Billetterie</h2>
@@ -497,76 +499,87 @@ export default function App() {
               </div>
             </div>
 
-            {/* 4 cartes KPIs */}
-            <div className="grid grid-cols-4 gap-4">
-              {/* 1. Jauge */}
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-slate-400 font-medium">1. Jauge (Taux de Remplissage)</span>
-                  <div className="group relative flex items-center cursor-pointer">
-                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Taux de Jauge :</strong> Pourcentage de places vendues par rapport à la capacité totale de la salle.
-                    </div>
-                  </div>
+            {/* BLOC DISTINCT : VUE GLOBALE DE LA SAISON (affiché en permanence en haut) */}
+            <div className="bg-gradient-to-r from-[#131927] to-[#1a2338] border border-emerald-500/30 rounded-xl p-5 space-y-3 shadow-lg">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">Synthèse Globale de la Saison (Toutes productions)</h3>
                 </div>
-                <div className="text-xl font-bold text-white">{currentData.fillingRate}</div>
-                <p className="text-[9px] text-slate-400">Total vendus : {currentData.soldTicketsText}</p>
+                <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                  Moyenne pondérée active
+                </span>
               </div>
 
-              {/* 2. Recette Nette / Place (RMT) */}
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-slate-400 font-medium">2. Recette Nette / Place (RMT)</span>
-                  <div className="group relative flex items-center cursor-pointer">
-                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Revenu Net Moyen :</strong> Moyenne nette réelle encaissée par billet après commissions.
-                    </div>
-                  </div>
+              <div className="grid grid-cols-4 gap-4 pt-1">
+                <div className="bg-[#0E131F]/80 border border-slate-800 p-3.5 rounded-lg space-y-1">
+                  <span className="text-[9px] text-slate-400 block uppercase font-medium">1. Jauge Globale Saison</span>
+                  <div className="text-lg font-bold text-white">{globalData.fillingRate}</div>
+                  <p className="text-[9px] text-slate-400">Total vendus : {globalData.soldTicketsText}</p>
                 </div>
-                <div className="text-xl font-bold text-white">
-                  {currentData.rmsNet} 
-                  <span className="text-[10px] font-normal text-slate-500"> / cible {currentData.targetRmtVal} €</span>
-                </div>
-                <p className="text-[9px] text-emerald-400">Revenu réel après commissions</p>
-              </div>
 
-              {/* 3. Point d'Équilibre (Rentabilité) */}
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-slate-400 font-medium">3. Point d'Équilibre (Rentabilité)</span>
-                  <div className="group relative flex items-center cursor-pointer">
-                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Point d'Équilibre :</strong> Indique si la billetterie couvre les coûts fixes selon l'objectif configuré.
-                    </div>
+                <div className="bg-[#0E131F]/80 border border-slate-800 p-3.5 rounded-lg space-y-1">
+                  <span className="text-[9px] text-slate-400 block uppercase font-medium">2. RMT Net Global (Moyen)</span>
+                  <div className="text-lg font-bold text-white">
+                    {globalData.rmsNet} 
+                    <span className="text-[10px] font-normal text-slate-400"> / cible {globalData.targetRmtVal} €</span>
                   </div>
+                  <p className="text-[9px] text-emerald-400">Moyenne pondérée après commissions</p>
                 </div>
-                <div className={`text-xl font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
-                  {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({currentData.coverage}% / cible {activeSrPercentage}%)
-                </div>
-                <p className="text-[9px] text-slate-500">Couverture des coûts fixes</p>
-              </div>
 
-              {/* 4. Réseaux de vente */}
-              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-slate-400 font-medium">4. Canaux de Vente (Cumul Saison)</span>
-                  <div className="group relative flex items-center cursor-pointer">
-                    <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Canaux de Vente :</strong> Répartition des ventes entre la billetterie directe et les réseaux partenaires.
-                    </div>
+                <div className="bg-[#0E131F]/80 border border-slate-800 p-3.5 rounded-lg space-y-1">
+                  <span className="text-[9px] text-slate-400 block uppercase font-medium">3. Point d'Équilibre Global</span>
+                  <div className={`text-lg font-bold ${isSREffectivelyReached ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {isSREffectivelyReached ? 'Atteint' : 'En cours'} ({globalData.coverage}% / cible {globalData.targetSr}%)
                   </div>
+                  <p className="text-[9px] text-slate-400">Couverture budgétaire de saison</p>
                 </div>
-                <div className="text-xs font-semibold text-slate-200 space-y-0.5 pt-1">
-                  <div className="flex justify-between"><span>Guichet direct :</span> <strong className="text-emerald-400">{currentData.networks.guichet}</strong></div>
-                  <div className="flex justify-between"><span>BilletReduc :</span> <strong className="text-amber-400">{currentData.networks.billetterieReduc}</strong></div>
-                  <div className="flex justify-between"><span>Réseau Fnac :</span> <strong className="text-slate-300">{currentData.networks.fnacReseau}</strong></div>
+
+                <div className="bg-[#0E131F]/80 border border-slate-800 p-3.5 rounded-lg space-y-1">
+                  <span className="text-[9px] text-slate-400 block uppercase font-medium">4. Canaux de Vente (Saison)</span>
+                  <div className="text-[10px] font-medium text-slate-200 space-y-0.5 pt-0.5">
+                    <div className="flex justify-between"><span>Guichet :</span> <strong className="text-emerald-400">{globalData.networks.guichet}</strong></div>
+                    <div className="flex justify-between"><span>BilletReduc :</span> <strong className="text-amber-400">{globalData.networks.billetterieReduc}</strong></div>
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* 4 cartes KPIs de la sélection active (si un spectacle est sélectionné) */}
+            {selectedSpectacleId !== 'all' && currentData && (
+              <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-3">
+                <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wide">
+                  Indicateurs spécifiques : {currentData.title}
+                </h4>
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg space-y-1">
+                    <span className="text-[9px] text-slate-400 block uppercase">Jauge spectacle</span>
+                    <div className="text-base font-bold text-white">{currentData.fillingRate}</div>
+                    <p className="text-[9px] text-slate-400">{currentData.soldTicketsText}</p>
+                  </div>
+
+                  <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg space-y-1">
+                    <span className="text-[9px] text-slate-400 block uppercase">RMT Net Spectacle</span>
+                    <div className="text-base font-bold text-white">
+                      {currentData.rmsNet} 
+                      <span className="text-[9px] font-normal text-slate-400"> / cible {currentData.targetRmtVal} €</span>
+                    </div>
+                    <p className="text-[9px] text-emerald-400">Objectif production</p>
+                  </div>
+
+                  <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg space-y-1">
+                    <span className="text-[9px] text-slate-400 block uppercase">Équilibre Spectacle</span>
+                    <div className="text-base font-bold text-emerald-400">{currentData.coverage}% / cible {currentData.targetSr}%</div>
+                    <p className="text-[9px] text-slate-400">Couverture des charges</p>
+                  </div>
+
+                  <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg space-y-1">
+                    <span className="text-[9px] text-slate-400 block uppercase">Réseaux de vente</span>
+                    <div className="text-[10px] text-slate-200">Guichet : <strong className="text-emerald-400">{currentData.networks.guichet.split(' ')[0]} pl.</strong></div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Bloc Insights & Recommandations IA */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
