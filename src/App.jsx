@@ -86,7 +86,7 @@ export default function App() {
     }));
   };
 
-  // Catalogue complet des spectacles
+  // Catalogue complet des spectacles avec leurs recommandations spécifiques
   const spectaclesList = [
     {
       id: 1,
@@ -98,6 +98,35 @@ export default function App() {
       totalCap: 5000,
       remainingTickets: '3 540',
       networks: { guichet: '567 pl. (45%)', billetterieReduc: '441 pl. (35%)', fnacReseau: '252 pl. (20%)' },
+      recommendations: [
+        {
+          type: 'alert',
+          badge: 'ALERTE : RISQUE FINANCIER',
+          date: 'Jeu. 12 Sept.',
+          diagnostic: 'Retard de vente à J-5 (45% cible). Jauge : 26% (130/500 pl.)',
+          detail: 'Manque à gagner estimé : -1 850 € Net',
+          actionText: '⚡ Action : 40 places à -20% sur BilletReduc',
+          actionable: true
+        },
+        {
+          type: 'opportunity',
+          badge: 'OPPORTUNITÉ DE HAUSSE TARIFAIRE',
+          date: 'Ven. 13 Sept.',
+          diagnostic: 'Forte demande à J-12. Carré Or rempli à 90%.',
+          detail: '',
+          actionText: '⚡ Action : +5 € sur 10 dern. places Carré Or.',
+          actionable: false
+        },
+        {
+          type: 'secure',
+          badge: 'SÉANCE SÉCURISÉE & CONFORME',
+          date: 'Sam. 14 Sept.',
+          diagnostic: 'Ventes conformes. Équilibre atteint à 117%.',
+          detail: '',
+          actionText: '⚡ Action : Stopper les réseaux tiers (0% comm.).',
+          actionable: false
+        }
+      ],
       representations: [
         { id: 101, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places vendues', alert: true },
         { id: 102, date: 'Ven. 13 Sept. — 20h00', rmsNet: 32.0, seats: '310/500 places vendues', alert: false },
@@ -115,6 +144,35 @@ export default function App() {
       totalCap: 4550,
       remainingTickets: '1 450',
       networks: { guichet: '1 860 pl. (60%)', billetterieReduc: '775 pl. (25%)', fnacReseau: '465 pl. (15%)' },
+      recommendations: [
+        {
+          type: 'secure',
+          badge: 'SÉANCE STABLE & RÉGULIÈRE',
+          date: 'Mer. 08 Oct.',
+          diagnostic: 'Vélocité des ventes conforme aux prévisions à J-30.',
+          detail: 'Objectif RMT atteint (34 € net).',
+          actionText: '⚡ Action : Maintenir le plan de communication actuel.',
+          actionable: false
+        },
+        {
+          type: 'opportunity',
+          badge: 'OPPORTUNITÉ DE COMPLEMENT',
+          date: 'Jeu. 09 Oct.',
+          diagnostic: '96% de la jauge atteinte. Fort engouement public.',
+          detail: '',
+          actionText: '⚡ Action : Ouvrir les strapontins de dernière minute (+20 pl.).',
+          actionable: false
+        },
+        {
+          type: 'secure',
+          badge: 'SÉANCE COMPLÈTE',
+          date: 'Ven. 10 Oct.',
+          diagnostic: 'Guichet fermé atteint 3 semaines avant la représentation.',
+          detail: '',
+          actionText: '⚡ Action : Activer une liste d\'attente numérique.',
+          actionable: false
+        }
+      ],
       representations: [
         { id: 201, date: 'Mer. 08 Oct. — 20h30', rmsNet: 34.0, seats: '420/500 places vendues', alert: false },
         { id: 202, date: 'Jeu. 09 Oct. — 20h30', rmsNet: 38.5, seats: '480/500 places vendues', alert: false },
@@ -131,6 +189,26 @@ export default function App() {
       totalCap: 5000,
       remainingTickets: '450',
       networks: { guichet: '3 640 pl. (80%)', billetterieReduc: '455 pl. (10%)', fnacReseau: '455 pl. (10%)' },
+      recommendations: [
+        {
+          type: 'opportunity',
+          badge: 'FORTE PERFORMANCE',
+          date: 'Jeu. 05 Nov.',
+          diagnostic: 'Succès critique et public. Taux de remplissage exceptionnel.',
+          detail: 'RMT net atteint : 42 € (Cible : 38 €).',
+          actionText: '⚡ Action : Aucune modification requise, exploitation optimale.',
+          actionable: false
+        },
+        {
+          type: 'secure',
+          badge: 'SEUIL DE RENTABILITÉ DÉPASSÉ',
+          date: 'Ven. 06 Nov.',
+          diagnostic: 'Complet depuis plus d\'un mois. Rentabilité assurée à 140%.',
+          detail: '',
+          actionText: '⚡ Action : Verrouiller les quotas partenaires.',
+          actionable: false
+        }
+      ],
       representations: [
         { id: 301, date: 'Jeu. 05 Nov. — 20h00', rmsNet: 42.0, seats: '490/500 places vendues', alert: false },
         { id: 302, date: 'Ven. 06 Nov. — 20h00', rmsNet: 44.5, seats: '500/500 places vendues (Complet)', alert: false }
@@ -205,6 +283,11 @@ export default function App() {
 
   const globalIsReached = globalData.coverage >= globalData.targetSr;
   const specIsReached = currentSpectacleData ? currentSpectacleData.coverage >= currentSpectacleData.targetSr : false;
+
+  // Sélection des recommandations à afficher (Globales combinées ou spécifiques au spectacle)
+  const activeRecommendations = selectedSpectacleId === 'all'
+    ? spectaclesList.flatMap(s => s.recommendations).slice(0, 3) // Affiche un mix de 3 recommandations pour la vue globale
+    : spectaclesList.find(s => s.id === Number(selectedSpectacleId))?.recommendations || [];
 
   const toggleSpectacleAccordion = (id) => {
     setOpenSpectacles(prev => ({ ...prev, [id]: !prev[id] }));
@@ -470,7 +553,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD COMPLET AVEC LES DEUX BLOCS VISUELS */
+          /* TABLEAU DE BORD COMPLET AVEC LES DEUX BLOCS ET RECO DYNAMIQUES */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -498,7 +581,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* BLOC 1 : SYNTHÈSE GLOBALE DE LA SAISON (Toujours visible) */}
+            {/* BLOC 1 : SYNTHÈSE GLOBALE DE LA SAISON */}
             <div className="bg-gradient-to-r from-[#131927] to-[#1a2338] border border-emerald-500/30 rounded-xl p-5 space-y-3 shadow-lg">
               <div className="flex justify-between items-center border-b border-slate-800 pb-2">
                 <div className="flex items-center gap-2">
@@ -544,7 +627,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* BLOC 2 : SYNTHÈSE DU SPECTACLE SÉLECTIONNÉ (S'affiche si un spectacle spécifique est sélectionné) */}
+            {/* BLOC 2 : SYNTHÈSE DU SPECTACLE SÉLECTIONNÉ */}
             {selectedSpectacleId !== 'all' && currentSpectacleData && (
               <div className="bg-gradient-to-r from-[#131927] to-[#1a2338] border border-cyan-500/30 rounded-xl p-5 space-y-3 shadow-lg">
                 <div className="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -592,13 +675,13 @@ export default function App() {
               </div>
             )}
 
-            {/* Bloc Insights & Recommandations IA */}
+            {/* BLOC 3 : INSIGHTS & RECO IA DYNAMIQUES SELON LE SPECTACLE */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs font-semibold text-white flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Recommandations Intelligentes & Alertes Séances
+                    Recommandations Intelligentes & Alertes Séances {selectedSpectacleId !== `all` ? `(${spectaclesList.find(s => s.id === Number(selectedSpectacleId))?.title})` : '(Vue Saison)'}
                   </h3>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
@@ -607,67 +690,47 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-                <span className="text-[10px] text-slate-500">7 stratég(ie)s active(s) dans le moteur</span>
+                <span className="text-[10px] text-slate-500">{activeRecommendations.length} recommandation(s) active(s)</span>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
-                        ALERTE : RISQUE FINANCIER
-                      </span>
-                      <span className="text-[9px] text-slate-500">Jeu. 12 Sept.</span>
-                    </div>
-                    <p className="text-[10px] text-slate-300">
-                      <strong className="text-white">Diagnostic :</strong> Retard de vente à J-5 (45% cible). Jauge : 26% (130/500 pl.)
-                    </p>
-                    <p className="text-[10px] text-rose-400 font-semibold">Manque à gagner estimé : -1 850 € Net</p>
-                  </div>
-                  <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between">
-                    <span className="text-[9px] text-amber-300 font-medium">⚡ Action : 40 places à -20% sur BilletReduc</span>
-                    <button
-                      onClick={() => setAppliedYield(!appliedYield)}
-                      className={`px-2 py-1 rounded text-[9px] font-semibold transition ${appliedYield ? 'bg-emerald-600 text-white' : 'bg-emerald-500 text-slate-950'}`}
-                    >
-                      {appliedYield ? '✓ Appliqué' : 'Activer 1-clic'}
-                    </button>
-                  </div>
-                </div>
+                {activeRecommendations.map((rec, index) => {
+                  const badgeColor = rec.type === 'alert' 
+                    ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' 
+                    : rec.type === 'opportunity' 
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
+                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
 
-                <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
-                        OPPORTUNITÉ DE HAUSSE TARIFAIRE
-                      </span>
-                      <span className="text-[9px] text-slate-500">Ven. 13 Sept.</span>
+                  return (
+                    <div key={index} className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between items-center">
+                          <span className={`${badgeColor} border text-[9px] px-1.5 py-0.5 rounded font-bold uppercase`}>
+                            {rec.badge}
+                          </span>
+                          <span className="text-[9px] text-slate-500">{rec.date}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-300">
+                          <strong className="text-white">Diagnostic :</strong> {rec.diagnostic}
+                        </p>
+                        {rec.detail && (
+                          <p className="text-[10px] text-rose-400 font-semibold">{rec.detail}</p>
+                        )}
+                      </div>
+                      <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between">
+                        <span className="text-[9px] text-amber-300 font-medium">{rec.actionText}</span>
+                        {rec.actionable && (
+                          <button
+                            onClick={() => setAppliedYield(!appliedYield)}
+                            className={`px-2 py-1 rounded text-[9px] font-semibold transition ${appliedYield ? 'bg-emerald-600 text-white' : 'bg-emerald-500 text-slate-950'}`}
+                          >
+                            {appliedYield ? '✓ Appliqué' : 'Activer 1-clic'}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-[10px] text-slate-300">
-                      <strong className="text-white">Diagnostic :</strong> Forte demande à J-12. Carré Or rempli à 90%.
-                    </p>
-                  </div>
-                  <div className="pt-2 border-t border-slate-800/60">
-                    <p className="text-[9px] text-emerald-400 font-medium">⚡ Action : +5 € sur 10 dern. places Carré Or.</p>
-                  </div>
-                </div>
-
-                <div className="bg-[#0E131F] border border-slate-800/80 p-3 rounded-lg space-y-2 flex flex-col justify-between">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
-                        SÉANCE SÉCURISÉE & CONFORME
-                      </span>
-                      <span className="text-[9px] text-slate-500">Sam. 14 Sept.</span>
-                    </div>
-                    <p className="text-[10px] text-slate-300">
-                      <strong className="text-white">Diagnostic :</strong> Ventes conformes. Équilibre atteint à 117%.
-                    </p>
-                  </div>
-                  <div className="pt-2 border-t border-slate-800/60">
-                    <p className="text-[9px] text-slate-300 font-medium">⚡ Action : Stopper les réseaux tiers (0% comm.).</p>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -690,7 +753,6 @@ export default function App() {
                 {spectaclesList.map((spec) => {
                   const isOpen = openSpectacles[spec.id];
                   const specSettingsObj = spectacleSettings[spec.id];
-                  const specTarget = specSettingsObj.srTarget;
                   const specRmtTarget = calculateTargetRmt(specSettingsObj);
 
                   return (
