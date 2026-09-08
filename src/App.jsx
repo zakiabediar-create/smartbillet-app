@@ -21,8 +21,8 @@ export default function App() {
     1: { 
       title: 'Le Misanthrope', 
       totalBudget: 119000, 
-      totalCap: 5000, // Capacité totale vendable
-      catOr: 55, catOrPct: 20, // Prix et % de la jauge
+      totalCap: 5000, 
+      catOr: 55, catOrPct: 20, 
       cat1: 38, cat1Pct: 50, 
       cat2: 22, cat2Pct: 30, 
       srTarget: 85, sold: 1260, rmsNetNum: 26.8 
@@ -106,14 +106,12 @@ export default function App() {
     }
   ];
 
-  // Fonction pour calculer le RMT cible automatique basé sur la jauge et l'objectif
   const calculateTargetRmt = (spec) => {
     const targetSoldSeats = spec.totalCap * (spec.srTarget / 100);
     if (targetSoldSeats === 0) return 0;
     return Math.round((spec.totalBudget / targetSoldSeats) * 10) / 10;
   };
 
-  // Calculs globaux de la saison
   const totalSoldTickets = Object.values(spectacleSettings).reduce((acc, s) => acc + s.sold, 0);
   const totalCapacity = Object.values(spectacleSettings).reduce((acc, s) => acc + s.totalCap, 0);
   const globalFillingRate = Math.round((totalSoldTickets / totalCapacity) * 100) + '%';
@@ -248,7 +246,7 @@ export default function App() {
         </header>
 
         {activeTab === 'Paramètres' ? (
-          /* ONGLET PARAMÈTRES AVEC CAPACITÉ ET RÉPARTITION PAR CATÉGORIE */
+          /* ONGLET PARAMÈTRES AVEC PRÉCISIONS DES POURCENTAGES */
           <div className="space-y-6 max-w-3xl">
             <div>
               <h2 className="text-sm font-semibold text-white">Paramètres de la Billetterie</h2>
@@ -344,38 +342,56 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Répartition par catégorie */}
+                      {/* Répartition par catégorie avec libellés clairs */}
                       <div className="grid grid-cols-3 gap-3 pt-2 border-t border-slate-800/60">
-                        <div className="bg-[#131927] p-2 rounded border border-slate-800 space-y-1">
+                        <div className="bg-[#131927] p-2.5 rounded border border-slate-800 space-y-1.5">
                           <div className="flex justify-between text-[9px] text-slate-400">
                             <span>Carré Or</span>
-                            <span>{Math.round(spec.totalCap * (spec.catOrPct/100))} pl.</span>
+                            <span className="text-emerald-400 font-bold">{Math.round(spec.totalCap * (spec.catOrPct/100))} pl.</span>
                           </div>
-                          <div className="flex gap-2">
-                            <input type="number" value={spec.catOr} onChange={(e) => handleSpectacleSettingChange(id, 'catOr', e.target.value)} className="w-1/2 bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px]" placeholder="Prix €" />
-                            <input type="number" value={spec.catOrPct} onChange={(e) => handleSpectacleSettingChange(id, 'catOrPct', e.target.value)} className="w-1/2 bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px]" placeholder="% jauge" />
+                          <div className="flex gap-2 items-center">
+                            <div className="w-1/2 relative">
+                              <input type="number" value={spec.catOr} onChange={(e) => handleSpectacleSettingChange(id, 'catOr', e.target.value)} className="w-full bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px] pr-4" />
+                              <span className="absolute right-1.5 top-1 text-[9px] text-slate-500">€</span>
+                            </div>
+                            <div className="w-1/2 relative">
+                              <input type="number" value={spec.catOrPct} onChange={(e) => handleSpectacleSettingChange(id, 'catOrPct', e.target.value)} className="w-full bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px] pr-4" />
+                              <span className="absolute right-1.5 top-1 text-[9px] text-slate-500">%</span>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="bg-[#131927] p-2 rounded border border-slate-800 space-y-1">
+                        <div className="bg-[#131927] p-2.5 rounded border border-slate-800 space-y-1.5">
                           <div className="flex justify-between text-[9px] text-slate-400">
                             <span>1ère Catégorie</span>
-                            <span>{Math.round(spec.totalCap * (spec.cat1Pct/100))} pl.</span>
+                            <span className="text-emerald-400 font-bold">{Math.round(spec.totalCap * (spec.cat1Pct/100))} pl.</span>
                           </div>
-                          <div className="flex gap-2">
-                            <input type="number" value={spec.cat1} onChange={(e) => handleSpectacleSettingChange(id, 'cat1', e.target.value)} className="w-1/2 bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px]" placeholder="Prix €" />
-                            <input type="number" value={spec.cat1Pct} onChange={(e) => handleSpectacleSettingChange(id, 'cat1Pct', e.target.value)} className="w-1/2 bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px]" placeholder="% jauge" />
+                          <div className="flex gap-2 items-center">
+                            <div className="w-1/2 relative">
+                              <input type="number" value={spec.cat1} onChange={(e) => handleSpectacleSettingChange(id, 'cat1', e.target.value)} className="w-full bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px] pr-4" />
+                              <span className="absolute right-1.5 top-1 text-[9px] text-slate-500">€</span>
+                            </div>
+                            <div className="w-1/2 relative">
+                              <input type="number" value={spec.cat1Pct} onChange={(e) => handleSpectacleSettingChange(id, 'cat1Pct', e.target.value)} className="w-full bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px] pr-4" />
+                              <span className="absolute right-1.5 top-1 text-[9px] text-slate-500">%</span>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="bg-[#131927] p-2 rounded border border-slate-800 space-y-1">
+                        <div className="bg-[#131927] p-2.5 rounded border border-slate-800 space-y-1.5">
                           <div className="flex justify-between text-[9px] text-slate-400">
                             <span>2ème Catégorie</span>
-                            <span>{Math.round(spec.totalCap * (spec.cat2Pct/100))} pl.</span>
+                            <span className="text-emerald-400 font-bold">{Math.round(spec.totalCap * (spec.cat2Pct/100))} pl.</span>
                           </div>
-                          <div className="flex gap-2">
-                            <input type="number" value={spec.cat2} onChange={(e) => handleSpectacleSettingChange(id, 'cat2', e.target.value)} className="w-1/2 bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px]" placeholder="Prix €" />
-                            <input type="number" value={spec.cat2Pct} onChange={(e) => handleSpectacleSettingChange(id, 'cat2Pct', e.target.value)} className="w-1/2 bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px]" placeholder="% jauge" />
+                          <div className="flex gap-2 items-center">
+                            <div className="w-1/2 relative">
+                              <input type="number" value={spec.cat2} onChange={(e) => handleSpectacleSettingChange(id, 'cat2', e.target.value)} className="w-full bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px] pr-4" />
+                              <span className="absolute right-1.5 top-1 text-[9px] text-slate-500">€</span>
+                            </div>
+                            <div className="w-1/2 relative">
+                              <input type="number" value={spec.cat2Pct} onChange={(e) => handleSpectacleSettingChange(id, 'cat2Pct', e.target.value)} className="w-full bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px] pr-4" />
+                              <span className="absolute right-1.5 top-1 text-[9px] text-slate-500">%</span>
+                            </div>
                           </div>
                         </div>
                       </div>
