@@ -31,7 +31,7 @@ export default function App() {
     }));
   };
 
-  // Catalogue complet des spectacles
+  // Catalogue complet des spectacles (canaux exprimés en % de la jauge totale de la salle)
   const spectaclesList = [
     {
       id: 1,
@@ -41,7 +41,7 @@ export default function App() {
       fillingRate: '26%',
       soldTickets: '1 260',
       remainingTickets: '3 540',
-      networks: { guichet: '45%', billetterieReduc: '35%', fnacReseau: '20%' },
+      networks: { guichet: '12% de la jauge', billetterieReduc: '9% de la jauge', fnacReseau: '5% de la jauge' }, // Total = 26%
       kpis: {
         rmsNet: '26.80 €',
         coverage: 72,
@@ -62,7 +62,7 @@ export default function App() {
       fillingRate: '68%',
       soldTickets: '3 100',
       remainingTickets: '1 450',
-      networks: { guichet: '60%', billetterieReduc: '25%', fnacReseau: '15%' },
+      networks: { guichet: '38% de la jauge', billetterieReduc: '18% de la jauge', fnacReseau: '12% de la jauge' }, // Total = 68%
       kpis: {
         rmsNet: '34.50 €',
         coverage: 88,
@@ -82,7 +82,7 @@ export default function App() {
       fillingRate: '91%',
       soldTickets: '4 550',
       remainingTickets: '450',
-      networks: { guichet: '80%', billetterieReduc: '10%', fnacReseau: '10%' },
+      networks: { guichet: '61% de la jauge', billetterieReduc: '18% de la jauge', fnacReseau: '12% de la jauge' }, // Total = 91%
       kpis: {
         rmsNet: '41.20 €',
         coverage: 114,
@@ -95,7 +95,7 @@ export default function App() {
     }
   ];
 
-  // Données KPIs dynamiques selon la sélection
+  // Données KPIs dynamiques selon la sélection (Vue globale de saison : 38% + 14% + 10% = 62%)
   const currentData = selectedSpectacleId === 'all' 
     ? {
         title: 'Vue Globale (Toute la Saison)',
@@ -104,7 +104,7 @@ export default function App() {
         rmsNet: '31.20 €',
         coverage: 82,
         status: 'Saison équilibrée',
-        networks: { guichet: '62%', billetterieReduc: '23%', fnacReseau: '15%' }
+        networks: { guichet: '38% de la jauge', billetterieReduc: '14% de la jauge', fnacReseau: '10% de la jauge' }
       }
     : {
         ...spectaclesList.find(s => s.id === Number(selectedSpectacleId)),
@@ -397,14 +397,14 @@ export default function App() {
                 <p className="text-[9px] text-slate-500">Couverture des coûts fixes</p>
               </div>
 
-              {/* 4. Réseaux de vente */}
+              {/* 4. Réseaux de vente (Ventilés en % de la jauge totale) */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-slate-400 font-medium">4. Canaux de Vente Principaux</span>
+                  <span className="text-[10px] text-slate-400 font-medium">4. Canaux de Vente (% Jauge)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Canaux de Vente :</strong> Répartition des ventes entre la billetterie directe et les réseaux partenaires.
+                      <strong>Canaux de Vente (% Jauge) :</strong> Ventilation du taux de remplissage global selon la part de chaque canal de distribution.
                     </div>
                   </div>
                 </div>
@@ -416,7 +416,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bloc Insights & Recommandations IA (AVEC INFOBULLE À CÔTÉ DU TITRE) */}
+            {/* Bloc Insights & Recommandations IA */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
