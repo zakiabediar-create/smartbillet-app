@@ -284,9 +284,20 @@ export default function App() {
   const globalIsReached = globalData.coverage >= globalData.targetSr;
   const specIsReached = currentSpectacleData ? currentSpectacleData.coverage >= currentSpectacleData.targetSr : false;
 
-  // Sélection des recommandations à afficher (Globales combinées ou spécifiques au spectacle)
+  // Calcul dynamique des places Carré Or pour le simulateur ("Mode Et Si ?")
+  const activeCatOrSeats = selectedSpectacleId === 'all'
+    ? Object.values(spectacleSettings).reduce((acc, s) => acc + s.catOrSeats, 0) // Somme de tous les carrés or en vue globale
+    : spectacleSettings[selectedSpectacleId].catOrSeats;
+
+  const activeSimulatorName = selectedSpectacleId === 'all'
+    ? 'Ensemble de la Saison (Tous spectacles)'
+    : spectacleSettings[selectedSpectacleId].title;
+
+  const simulatorImpact = autoYieldPrice * activeCatOrSeats;
+
+  // Sélection des recommandations à afficher
   const activeRecommendations = selectedSpectacleId === 'all'
-    ? spectaclesList.flatMap(s => s.recommendations).slice(0, 3) // Affiche un mix de 3 recommandations pour la vue globale
+    ? spectaclesList.flatMap(s => s.recommendations).slice(0, 3)
     : spectaclesList.find(s => s.id === Number(selectedSpectacleId))?.recommendations || [];
 
   const toggleSpectacleAccordion = (id) => {
@@ -553,7 +564,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD COMPLET AVEC LES DEUX BLOCS ET RECO DYNAMIQUES */
+          /* TABLEAU DE BORD COMPLET AVEC SIMULATEUR DYNAMIQUE */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -675,7 +686,7 @@ export default function App() {
               </div>
             )}
 
-            {/* BLOC 3 : INSIGHTS & RECO IA DYNAMIQUES SELON LE SPECTACLE */}
+            {/* BLOC 3 : RECOMMANDATIONS IA DYNAMIQUES */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -812,14 +823,17 @@ export default function App() {
               </div>
             </div>
 
-            {/* Simulateur de Yield ("Mode Et Si ?") */}
+            {/* BLOC 4 : SIMULATEUR D'IMPACT TARIFAIRE DYNAMIQUE */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
-                <h3 className="text-xs font-semibold text-white">Simulateur d'Impact Tarifaire ("Mode Et Si ?")</h3>
+                <div>
+                  <h3 className="text-xs font-semibold text-white">Simulateur d'Impact Tarifaire ("Mode Et Si ?")</h3>
+                  <p className="text-[9px] text-slate-400">Basé sur le périmètre actif : <strong className="text-emerald-400">{activeSimulatorName}</strong> ({activeCatOrSeats} places Carré Or)</p>
+                </div>
                 <div className="group relative flex items-center cursor-pointer">
                   <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                    <strong>Simulateur :</strong> Estimez l'impact financier net d'une modification tarifaire sur vos carrés VIP.
+                    <strong>Simulateur :</strong> Estimez l'impact financier net d'une hausse tarifaire sur vos carrés VIP du spectacle sélectionné.
                   </div>
                 </div>
               </div>
@@ -843,7 +857,7 @@ export default function App() {
                 </div>
                 <div className="bg-[#0E131F] border border-slate-800 p-3 rounded-lg text-center space-y-1">
                   <span className="text-[9px] text-slate-500 uppercase tracking-wider block">Impact financier net estimé</span>
-                  <div className="text-lg font-bold text-emerald-400">+{autoYieldPrice * 955} €</div>
+                  <div className="text-lg font-bold text-emerald-400">+{simulatorImpact.toLocaleString()} €</div>
                 </div>
               </div>
             </div>
