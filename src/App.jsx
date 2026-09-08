@@ -16,7 +16,7 @@ export default function App() {
   const [notifRentability, setNotifRentability] = useState(true);
   const [notifWeekly, setNotifWeekly] = useState(true);
 
-  // Modèles économiques par spectacle avec nombre de places par catégorie
+  // Modèles économiques par spectacle avec répartition intelligente
   const [spectacleSettings, setSpectacleSettings] = useState({
     1: { 
       title: 'Le Misanthrope', 
@@ -46,6 +46,40 @@ export default function App() {
       srTarget: 70, sold: 4550, rmsNetNum: 41.2 
     }
   });
+
+  // Gestion intelligente de la modification avec rééquilibrage automatique des autres catégories
+  const handleSeatChange = (id, changedCat, newSeatsValue) => {
+    setSpectacleSettings(prev => {
+      const spec = prev[id];
+      const totalCap = spec.totalCap;
+      let val = Math.max(0, Number(newSeatsValue));
+      if (val > totalCap) val = totalCap;
+
+      let updated = { ...spec };
+
+      if (changedCat === 'or') {
+        const remaining = totalCap - val;
+        const currentOtherSum = spec.cat1Seats + spec.cat2Seats;
+        updated.catOrSeats = val;
+        if (currentOtherSum > 0) {
+          updated.cat1Seats = Math.round(remaining * (spec.cat1Seats / currentOtherSum));
+          updated.cat2Seats = remaining - updated.cat1Seats;
+        } else {
+          updated.cat1Seats = Math.round(remaining / 2);
+          updated.cat2Seats = remaining - updated.cat1Seats;
+        }
+      } else if (changedCat === 'cat1') {
+        const remaining = totalCap - spec.catOrSeats - val;
+        updated.cat1Seats = val;
+        updated.cat2Seats = Math.max(0, remaining);
+      } else if (changedCat === 'cat2') {
+        updated.cat2Seats = val;
+        // Laisser 1ère cat absorber le reste si besoin, ou vice versa
+      }
+
+      return { ...prev, [id]: updated };
+    });
+  };
 
   const handleSpectacleSettingChange = (id, field, value) => {
     setSpectacleSettings(prev => ({
@@ -246,7 +280,7 @@ export default function App() {
         </header>
 
         {activeTab === 'Paramètres' ? (
-          /* ONGLET PARAMÈTRES AVEC CONTRÔLE STRICT DE LA JAUGE */
+          /* ONGLET PARAMÈTRES AVEC RÉÉQUILIBRAGE AUTOMATIQUE DES PLACES */
           <div className="space-y-6 max-w-3xl">
             <div>
               <h2 className="text-sm font-semibold text-white">Paramètres de la Billetterie</h2>
@@ -287,11 +321,11 @@ export default function App() {
               </div>
             </div>
 
-            {/* Carte Budgets, Capacités & Ventilation en places */}
+            {/* Carte Budgets, Capacités & Ventilation intelligente */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-5 space-y-4">
               <div>
                 <h3 className="text-xs font-semibold text-white">Modèles Économiques & Ventilation par Catégorie (en places)</h3>
-                <p className="text-[10px] text-slate-400">Modifiez le nombre de places par catégorie : le pourcentage s'ajustera automatiquement pour respecter la capacité totale.</p>
+                <p className="text-[10px] text-slate-400">Modifiez le nombre de places d'une catégorie : les autres catégories s'ajustent automatiquement pour respecter la jauge totale.</p>
               </div>
 
               <div className="space-y-5 pt-1">
@@ -299,11 +333,10 @@ export default function App() {
                   const spec = spectacleSettings[id];
                   const calculatedRmt = calculateTargetRmt(spec);
                   
-                  // Calcul automatique des pourcentages basés sur le nombre de places et la capacité totale
                   const cap = spec.totalCap || 1;
                   const orPct = Math.round((spec.catOrSeats / cap) * 100);
                   const cat1Pct = Math.round((spec.cat1Seats / cap) * 100);
-                  const cat2Pct = 100 - (orPct + cat1Pct); // Le reste exact pour faire 100%
+                  const cat2Pct = Math.max(0, 100 - (orPct + cat1Pct));
 
                   const avgPrice = Math.round((spec.catOr * (orPct/100) + spec.cat1 * (cat1Pct/100) + spec.cat2 * (cat2Pct/100)));
 
@@ -349,7 +382,7 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Répartition par catégorie avec saisie en places et affichage automatique du % */}
+                      {/* Répartition par catégorie avec rééquilibrage automatique */}
                       <div className="grid grid-cols-3 gap-3 pt-2 border-t border-slate-800/60">
                         <div className="bg-[#131927] p-2.5 rounded border border-slate-800 space-y-1.5">
                           <div className="flex justify-between text-[9px] text-slate-400">
@@ -362,7 +395,7 @@ export default function App() {
                               <span className="absolute right-1.5 top-1 text-[9px] text-slate-500">€</span>
                             </div>
                             <div className="w-1/2 relative">
-                              <input type="number" value={spec.catOrSeats} onChange={(e) => handleSpectacleSettingChange(id, 'catOrSeats', e.target.value)} className="w-full bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px] pr-5" />
+                              <input type="number" value={spec.catOrSeats} onChange={(e) => handleSeatChange(id, 'or', e.target.value)} className="w-full bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px] pr-5" />
                               <span className="absolute right-1.5 top-1 text-[9px] text-slate-500">pl.</span>
                             </div>
                           </div>
@@ -379,7 +412,7 @@ export default function App() {
                               <span className="absolute right-1.5 top-1 text-[9px] text-slate-500">€</span>
                             </div>
                             <div className="w-1/2 relative">
-                              <input type="number" value={spec.cat1Seats} onChange={(e) => handleSpectacleSettingChange(id, 'cat1Seats', e.target.value)} className="w-full bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px] pr-5" />
+                              <input type="number" value={spec.cat1Seats} onChange={(e) => handleSeatChange(id, 'cat1', e.target.value)} className="w-full bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px] pr-5" />
                               <span className="absolute right-1.5 top-1 text-[9px] text-slate-500">pl.</span>
                             </div>
                           </div>
@@ -396,7 +429,7 @@ export default function App() {
                               <span className="absolute right-1.5 top-1 text-[9px] text-slate-500">€</span>
                             </div>
                             <div className="w-1/2 relative">
-                              <input type="number" value={spec.cat2Seats} onChange={(e) => handleSpectacleSettingChange(id, 'cat2Seats', e.target.value)} className="w-full bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px] pr-5" />
+                              <input type="number" value={spec.cat2Seats} onChange={(e) => handleSeatChange(id, 'cat2', e.target.value)} className="w-full bg-[#0E131F] border border-slate-700 rounded px-1.5 py-1 text-white text-[10px] pr-5" />
                               <span className="absolute right-1.5 top-1 text-[9px] text-slate-500">pl.</span>
                             </div>
                           </div>
