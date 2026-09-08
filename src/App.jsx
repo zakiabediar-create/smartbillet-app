@@ -11,28 +11,27 @@ export default function App() {
   // Paramètres globaux de billetterie
   const [venueType, setVenueType] = useState('Théâtre');
   const [defaultProfile, setDefaultProfile] = useState('Responsable Billetterie');
-  const [targetRmt, setTargetRmt] = useState(30);
 
   // Toggles de notifications
   const [notifRentability, setNotifRentability] = useState(true);
   const [notifWeekly, setNotifWeekly] = useState(true);
 
-  // Modèles économiques par grille de catégories (Option 2)
+  // Modèles économiques par spectacle avec RMT Cible dédié
   const [spectacleSettings, setSpectacleSettings] = useState({
     1: { 
       title: 'Le Misanthrope', 
-      catOr: 55, cat1: 38, cat2: 22, // Prix publics par catégorie
-      srTarget: 85, sold: 1260, totalCap: 5000, rmsNetNum: 26.8 
+      catOr: 55, cat1: 38, cat2: 22, 
+      srTarget: 85, targetRmt: 28, sold: 1260, totalCap: 5000, rmsNetNum: 26.8 
     },
     2: { 
       title: 'Le Dîner de Cons', 
       catOr: 50, cat1: 35, cat2: 20, 
-      srTarget: 75, sold: 3100, totalCap: 4550, rmsNetNum: 34.5 
+      srTarget: 75, targetRmt: 32, sold: 3100, totalCap: 4550, rmsNetNum: 34.5 
     },
     3: { 
       title: 'Fary — Aime', 
       catOr: 60, cat1: 42, cat2: 25, 
-      srTarget: 70, sold: 4550, totalCap: 5000, rmsNetNum: 41.2 
+      srTarget: 70, targetRmt: 38, sold: 4550, totalCap: 5000, rmsNetNum: 41.2 
     }
   });
 
@@ -55,11 +54,6 @@ export default function App() {
       totalCap: 5000,
       remainingTickets: '3 540',
       networks: { guichet: '567 pl. (45%)', billetterieReduc: '441 pl. (35%)', fnacReseau: '252 pl. (20%)' },
-      kpis: {
-        rmsNet: '26.80 €',
-        coverage: 72,
-        status: 'Attention : Jauge lente'
-      },
       representations: [
         { id: 101, date: 'Jeu. 12 Sept. — 19h00', rmsNet: 21.5, seats: '130/500 places vendues', alert: true },
         { id: 102, date: 'Ven. 13 Sept. — 20h00', rmsNet: 32.0, seats: '310/500 places vendues', alert: false },
@@ -77,11 +71,6 @@ export default function App() {
       totalCap: 4550,
       remainingTickets: '1 450',
       networks: { guichet: '1 860 pl. (60%)', billetterieReduc: '775 pl. (25%)', fnacReseau: '465 pl. (15%)' },
-      kpis: {
-        rmsNet: '34.50 €',
-        coverage: 88,
-        status: 'Dynamique excellente'
-      },
       representations: [
         { id: 201, date: 'Mer. 08 Oct. — 20h30', rmsNet: 34.0, seats: '420/500 places vendues', alert: false },
         { id: 202, date: 'Jeu. 09 Oct. — 20h30', rmsNet: 38.5, seats: '480/500 places vendues', alert: false },
@@ -98,11 +87,6 @@ export default function App() {
       totalCap: 5000,
       remainingTickets: '450',
       networks: { guichet: '3 640 pl. (80%)', billetterieReduc: '455 pl. (10%)', fnacReseau: '455 pl. (10%)' },
-      kpis: {
-        rmsNet: '41.20 €',
-        coverage: 114,
-        status: 'Quasi-complet'
-      },
       representations: [
         { id: 301, date: 'Jeu. 05 Nov. — 20h00', rmsNet: 42.0, seats: '490/500 places vendues', alert: false },
         { id: 302, date: 'Ven. 06 Nov. — 20h00', rmsNet: 44.5, seats: '500/500 places vendues (Complet)', alert: false }
@@ -123,6 +107,11 @@ export default function App() {
     return acc + (s.sold * specCoverage);
   }, 0);
   const globalCoverage = Math.round(weightedCoverageSum / totalSoldTickets);
+
+  // RMT cible global moyen (pondéré)
+  const weightedTargetRmtSum = Object.values(spectacleSettings).reduce((acc, s) => acc + (s.sold * s.targetRmt), 0);
+  const globalTargetRmt = Math.round(weightedTargetRmtSum / totalSoldTickets);
+
   const globalTargetSr = Math.round(Object.values(spectacleSettings).reduce((acc, s) => acc + s.srTarget, 0) / 3);
 
   const totalGuichet = 567 + 1860 + 3640;
@@ -136,7 +125,7 @@ export default function App() {
         soldTicketsText: `${totalSoldTickets.toLocaleString()} / ${totalCapacity.toLocaleString()} pl.`,
         rmsNet: `${globalWeightedRmt} €`,
         coverage: globalCoverage,
-        status: 'Saison équilibrée',
+        targetRmtVal: globalTargetRmt,
         networks: { 
           guichet: `${totalGuichet.toLocaleString()} pl. (68%)`, 
           billetterieReduc: `${totalBilletReduc.toLocaleString()} pl. (19%)`, 
@@ -149,6 +138,7 @@ export default function App() {
         soldTicketsText: `${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).soldCount} / ${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).totalCap} pl.`,
         rmsNet: spectacleSettings[selectedSpectacleId].rmsNetNum.toFixed(2) + ' €',
         coverage: spectacleSettings[selectedSpectacleId].sold === 1260 ? 72 : spectacleSettings[selectedSpectacleId].sold === 3100 ? 88 : 114,
+        targetRmtVal: spectacleSettings[selectedSpectacleId].targetRmt,
         networks: spectaclesList.find(s => s.id === Number(selectedSpectacleId)).networks
       };
 
@@ -233,18 +223,18 @@ export default function App() {
         </header>
 
         {activeTab === 'Paramètres' ? (
-          /* ONGLET PARAMÈTRES AVEC GRILLES TARIFAIRES PAR CATÉGORIE */
+          /* ONGLET PARAMÈTRES AVEC RMT CIBLE PAR SPECTACLE */
           <div className="space-y-6 max-w-3xl">
             <div>
               <h2 className="text-sm font-semibold text-white">Paramètres de la Billetterie</h2>
-              <p className="text-[10px] text-slate-400">Configurez votre établissement et les grilles tarifaires de vos spectacles.</p>
+              <p className="text-[10px] text-slate-400">Configurez votre établissement et les objectifs financiers par spectacle.</p>
             </div>
 
             {/* Carte Établissement */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-5 space-y-4">
-              <h3 className="text-xs font-semibold text-white">Établissement & Objectif Principal</h3>
+              <h3 className="text-xs font-semibold text-white">Établissement & Contexte</h3>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[11px] text-slate-300 font-medium block">Type d'établissement</label>
                   <select
@@ -271,30 +261,19 @@ export default function App() {
                     <option value="Responsable Marketing">Responsable Marketing</option>
                   </select>
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300 font-medium block">RMT Cible (€ / billet)</label>
-                  <input
-                    type="number"
-                    value={targetRmt}
-                    onChange={(e) => setTargetRmt(Number(e.target.value))}
-                    className="w-full bg-[#0E131F] border border-slate-700 rounded px-3 py-2 text-white text-xs"
-                  />
-                </div>
               </div>
             </div>
 
-            {/* Carte Grilles Tarifaires par Catégorie */}
+            {/* Carte Grilles Tarifaires & RMT Cible par Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 rounded-xl p-5 space-y-4">
               <div>
-                <h3 className="text-xs font-semibold text-white">Grilles Tarifaires par Catégorie et Spectacle</h3>
-                <p className="text-[10px] text-slate-400">Définissez les prix publics par catégorie (Carré Or, 1ère et 2ème cat.) pour chaque production.</p>
+                <h3 className="text-xs font-semibold text-white">Objectifs Financiers & Grilles par Spectacle</h3>
+                <p className="text-[10px] text-slate-400">Définissez le RMT Cible net et les prix publics par catégorie pour chaque production.</p>
               </div>
 
               <div className="space-y-4 pt-1">
                 {Object.keys(spectacleSettings).map((id) => {
                   const spec = spectacleSettings[id];
-                  // Calcul d'un prix moyen indicatif basé sur la grille
                   const avgPrice = Math.round((spec.catOr * 0.2 + spec.cat1 * 0.5 + spec.cat2 * 0.3));
 
                   return (
@@ -304,7 +283,17 @@ export default function App() {
                         <span className="text-[10px] text-emerald-400 font-medium">Panier moyen indicatif : ~{avgPrice} €</span>
                       </div>
 
-                      <div className="grid grid-cols-4 gap-3">
+                      <div className="grid grid-cols-5 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-slate-400 block">RMT Cible Net (€) :</label>
+                          <input
+                            type="number"
+                            value={spec.targetRmt}
+                            onChange={(e) => handleSpectacleSettingChange(id, 'targetRmt', e.target.value)}
+                            className="w-full bg-[#131927] border border-emerald-500/50 rounded px-2.5 py-1.5 text-emerald-400 font-bold text-xs"
+                          />
+                        </div>
+
                         <div className="space-y-1">
                           <label className="text-[9px] text-slate-400 block">Carré Or (€) :</label>
                           <input
@@ -316,7 +305,7 @@ export default function App() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] text-slate-400 block">1ère Catégorie (€) :</label>
+                          <label className="text-[9px] text-slate-400 block">1ère Cat. (€) :</label>
                           <input
                             type="number"
                             value={spec.cat1}
@@ -326,7 +315,7 @@ export default function App() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] text-slate-400 block">2ème Catégorie (€) :</label>
+                          <label className="text-[9px] text-slate-400 block">2ème Cat. (€) :</label>
                           <input
                             type="number"
                             value={spec.cat2}
@@ -336,7 +325,7 @@ export default function App() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] text-slate-400 block">Objectif Remplissage (%) :</label>
+                          <label className="text-[9px] text-slate-400 block">Obj. Remplis. (%) :</label>
                           <input
                             type="number"
                             value={spec.srTarget}
@@ -424,7 +413,7 @@ export default function App() {
                 <p className="text-[9px] text-slate-400">Total vendus : {currentData.soldTicketsText}</p>
               </div>
 
-              {/* 2. Recette Nette / Place (RMT) */}
+              {/* 2. Recette Nette / Place (RMT) avec cible dynamique */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-400 font-medium">2. Recette Nette / Place (RMT)</span>
@@ -437,7 +426,7 @@ export default function App() {
                 </div>
                 <div className="text-xl font-bold text-white">
                   {currentData.rmsNet} 
-                  <span className="text-[10px] font-normal text-slate-500"> / cible {targetRmt} €</span>
+                  <span className="text-[10px] font-normal text-slate-500"> / cible {currentData.targetRmtVal} €</span>
                 </div>
                 <p className="text-[9px] text-emerald-400">Revenu réel après commissions</p>
               </div>
@@ -576,6 +565,7 @@ export default function App() {
                 {spectaclesList.map((spec) => {
                   const isOpen = openSpectacles[spec.id];
                   const specTarget = spectacleSettings[spec.id].srTarget;
+                  const specRmtTarget = spectacleSettings[spec.id].targetRmt;
                   return (
                     <div key={spec.id} className="border border-slate-800/80 rounded-lg overflow-hidden bg-[#0E131F]">
                       <button
@@ -584,7 +574,7 @@ export default function App() {
                       >
                         <div>
                           <span className="text-[9px] text-slate-400 uppercase tracking-wider block font-semibold">
-                            {spec.category} (CIBLE ÉQUILIBRE : {specTarget}%)
+                            {spec.category} (CIBLE RMT : {specRmtTarget} €)
                           </span>
                           <h4 className="font-bold text-white text-sm">{spec.title}</h4>
                           <p className="text-[10px] text-slate-400">{spec.dates}</p>
@@ -613,7 +603,7 @@ export default function App() {
                               <div>
                                 <span className="font-semibold text-white block text-[11px] mb-0.5">{rep.date}</span>
                                 <span className="text-slate-300">
-                                  Revenu net moyen : <strong>{rep.rmsNet} €</strong> | Objectif équilibre requis : <strong>{targetRmt} €</strong> | Jauge : <strong>{rep.seats}</strong>
+                                  Revenu net moyen : <strong>{rep.rmsNet} €</strong> | Objectif RMT requis : <strong>{specRmtTarget} €</strong> | Jauge : <strong>{rep.seats}</strong>
                                 </span>
                               </div>
                               <span className={`px-2.5 py-1 rounded text-[9px] font-bold ${
@@ -621,7 +611,7 @@ export default function App() {
                                   ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30' 
                                   : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                               }`}>
-                                {rep.alert ? '⚠ Action requise — Sous l\'objectif d\'équilibre' : '✓ Séance équilibrée — Objectif atteint'}
+                                {rep.alert ? '⚠ Action requise — Sous l\'objectif RMT' : '✓ Séance équilibrée — Objectif atteint'}
                               </span>
                             </div>
                           ))}
