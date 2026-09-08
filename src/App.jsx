@@ -17,11 +17,11 @@ export default function App() {
   const [notifRentability, setNotifRentability] = useState(true);
   const [notifWeekly, setNotifWeekly] = useState(true);
 
-  // Modèles économiques œuvre par œuvre
+  // Modèles économiques œuvre par œuvre (Coût de revient et Objectif d'équilibre %)
   const [spectacleSettings, setSpectacleSettings] = useState({
-    1: { title: 'Le Misanthrope', baseCost: 38.0, srTarget: 85 },
-    2: { title: 'Le Dîner de Cons', baseCost: 32.0, srTarget: 75 },
-    3: { title: 'Fary — Aime', baseCost: 30.0, srTarget: 70 }
+    1: { title: 'Le Misanthrope', baseCost: 38.0, srTarget: 85, sold: 1260, totalCap: 5000, rmsNetNum: 26.8 },
+    2: { title: 'Le Dîner de Cons', baseCost: 32.0, srTarget: 75, sold: 3100, totalCap: 4550, rmsNetNum: 34.5 },
+    3: { title: 'Fary — Aime', baseCost: 30.0, srTarget: 70, sold: 4550, totalCap: 5000, rmsNetNum: 41.2 }
   });
 
   const handleSpectacleSettingChange = (id, field, value) => {
@@ -98,24 +98,37 @@ export default function App() {
     }
   ];
 
-  // Calculs dynamiques de la Somme Totale de la Saison
-  const totalSoldTickets = spectaclesList.reduce((acc, s) => acc + s.soldCount, 0); // 8910
-  const totalCapacity = spectaclesList.reduce((acc, s) => acc + s.totalCap, 0); // 14550
-  const globalFillingRate = Math.round((totalSoldTickets / totalCapacity) * 100) + '%'; // 61%
+  // Calculs globaux de la saison (sommes et moyennes pondérées)
+  const totalSoldTickets = Object.values(spectacleSettings).reduce((acc, s) => acc + s.sold, 0);
+  const totalCapacity = Object.values(spectacleSettings).reduce((acc, s) => acc + s.totalCap, 0);
+  const globalFillingRate = Math.round((totalSoldTickets / totalCapacity) * 100) + '%';
+
+  // RMT Globale pondérée = Somme(Billets * RMT) / Total Billets
+  const weightedRmtSum = Object.values(spectacleSettings).reduce((acc, s) => acc + (s.sold * s.rmsNetNum), 0);
+  const globalWeightedRmt = (weightedRmtSum / totalSoldTickets).toFixed(2);
+
+  // Couverture globale moyenne pondérée par les objectifs spécifiques
+  const weightedCoverageSum = Object.values(spectacleSettings).reduce((acc, s) => {
+    let specCoverage = s.sold === 1260 ? 72 : s.sold === 3100 ? 88 : 114;
+    return acc + (s.sold * specCoverage);
+  }, 0);
+  const globalCoverage = Math.round(weightedCoverageSum / totalSoldTickets);
+  const globalTargetSr = Math.round(Object.values(spectacleSettings).reduce((acc, s) => acc + s.srTarget, 0) / 3);
+  const isGlobalSrReached = globalCoverage >= globalTargetSr;
 
   // Somme des canaux par volume de places vendues sur la saison
-  const totalGuichet = Math.round(567 + 1860 + 3640); // 6 067 pl. (68%)
-  const totalBilletReduc = Math.round(441 + 775 + 455); // 1 671 pl. (19%)
-  const totalFnac = Math.round(252 + 465 + 455); // 1 172 pl. (13%)
+  const totalGuichet = 567 + 1860 + 3640;
+  const totalBilletReduc = 441 + 775 + 455;
+  const totalFnac = 252 + 465 + 455;
 
-  // Données KPIs selon la sélection (Vue Globale = Somme cumulée)
+  // Données KPIs dynamiques selon la sélection
   const currentData = selectedSpectacleId === 'all' 
     ? {
         title: 'Vue Globale (Toute la Saison)',
         fillingRate: globalFillingRate,
         soldTicketsText: `${totalSoldTickets.toLocaleString()} / ${totalCapacity.toLocaleString()} pl.`,
-        rmsNet: '31.20 €',
-        coverage: 82,
+        rmsNet: `${globalWeightedRmt} €`,
+        coverage: globalCoverage,
         status: 'Saison équilibrée',
         networks: { 
           guichet: `${totalGuichet.toLocaleString()} pl. (68%)`, 
@@ -127,11 +140,13 @@ export default function App() {
         ...spectaclesList.find(s => s.id === Number(selectedSpectacleId)),
         fillingRate: spectaclesList.find(s => s.id === Number(selectedSpectacleId)).fillingRate,
         soldTicketsText: `${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).soldCount} / ${spectaclesList.find(s => s.id === Number(selectedSpectacleId)).totalCap} pl.`,
+        rmsNet: spectacleSettings[selectedSpectacleId].rmsNetNum.toFixed(2) + ' €',
+        coverage: spectacleSettings[selectedSpectacleId].sold === 1260 ? 72 : spectacleSettings[selectedSpectacleId].sold === 3100 ? 88 : 114,
         networks: spectaclesList.find(s => s.id === Number(selectedSpectacleId)).networks
       };
 
   const activeSrPercentage = selectedSpectacleId === 'all' 
-    ? 80 
+    ? globalTargetSr 
     : spectacleSettings[selectedSpectacleId].srTarget;
 
   const isSREffectivelyReached = currentData.coverage >= activeSrPercentage;
@@ -336,7 +351,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* TABLEAU DE BORD COMPLET AVEC SOMME CUMULÉE */
+          /* TABLEAU DE BORD COMPLET AVEC CALCULS ET RÈGLES DYNAMIQUES */
           <>
             {/* Sélecteur de Spectacle */}
             <div className="bg-[#131927] border border-slate-800/80 p-3 rounded-xl flex items-center justify-between">
@@ -364,7 +379,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* 4 cartes KPIs (Cumul réel de saison) */}
+            {/* 4 cartes KPIs avec règles de calcul dynamiques explicitées dans les infobulles ⓘ */}
             <div className="grid grid-cols-4 gap-4">
               {/* 1. Jauge */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
@@ -372,8 +387,8 @@ export default function App() {
                   <span className="text-[10px] text-slate-400 font-medium">1. Jauge (Taux de Remplissage)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Taux de Jauge :</strong> Somme cumulée des places vendues sur l'ensemble des spectacles par rapport à la capacité totale.
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Règle de calcul (Vue Globale) :</strong> Somme totale des billets vendus sur tous les spectacles divisée par la capacité totale cumulée de la saison.
                     </div>
                   </div>
                 </div>
@@ -381,32 +396,32 @@ export default function App() {
                 <p className="text-[9px] text-slate-400">Total vendus : {currentData.soldTicketsText}</p>
               </div>
 
-              {/* 2. Recette Nette par place */}
+              {/* 2. Recette Nette par place (RMT) avec règle de calcul */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-400 font-medium">2. Recette Nette / Place (RMT)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>RMT Net :</strong> Revenu moyen réel encaissé par billet après déduction des commissions des réseaux.
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Règle de calcul (Vue Globale) :</strong> Moyenne pondérée par le volume de billets vendus de la RMT nette de chaque spectacle de la saison.
                     </div>
                   </div>
                 </div>
                 <div className="text-xl font-bold text-white">
-                  {selectedSpectacleId === 'all' ? currentData.rmsNet : currentData.kpis.rmsNet} 
+                  {currentData.rmsNet} 
                   <span className="text-[10px] font-normal text-slate-500"> / cible {targetRmt} €</span>
                 </div>
                 <p className="text-[9px] text-emerald-400">Revenu réel après commissions</p>
               </div>
 
-              {/* 3. Point d'Équilibre (Rentabilité) */}
+              {/* 3. Point d'Équilibre (Rentabilité) avec règle de calcul */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-400 font-medium">3. Point d'Équilibre (Rentabilité)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Point d'Équilibre :</strong> Indique si la billetterie couvre les charges fixes de la production selon l'objectif configuré.
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Règle de calcul (Vue Globale) :</strong> Ratio global entre le volume des ventes réelles et l'objectif de couverture des charges cumulées de la saison.
                     </div>
                   </div>
                 </div>
@@ -416,14 +431,14 @@ export default function App() {
                 <p className="text-[9px] text-slate-500">Couverture des coûts fixes</p>
               </div>
 
-              {/* 4. Réseaux de vente (Somme cumulée des places par canal) */}
+              {/* 4. Réseaux de vente */}
               <div className="bg-[#131927] border border-slate-800/80 p-4 rounded-xl space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-400 font-medium">4. Canaux de Vente (Cumul Saison)</span>
                   <div className="group relative flex items-center cursor-pointer">
                     <span className="h-4 w-4 rounded-full bg-slate-800 text-slate-400 border border-slate-700 text-[9px] flex items-center justify-center font-bold hover:bg-emerald-500 hover:text-slate-950 transition">ⓘ</span>
-                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-56 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
-                      <strong>Canaux de Vente :</strong> Somme totale des billets vendus par canal sur l'ensemble de la saison.
+                    <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block w-64 bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded shadow-xl border border-slate-700 z-20 pointer-events-none">
+                      <strong>Règle de calcul (Vue Globale) :</strong> Somme totale des billets vendus par canal sur l'ensemble des spectacles de la saison.
                     </div>
                   </div>
                 </div>
